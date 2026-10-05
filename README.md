@@ -1,3 +1,3 @@
-# apclrwa
+# APC Layout Residents Welfare Association
 
-This repository was initialized for the `initial` branch setup.
+Community-focused landing page for APC Layout, Thindlu, Bengaluru – 560097.
