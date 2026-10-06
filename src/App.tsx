@@ -1,4 +1,4 @@
-import {FormEvent, useEffect, useState, type CSSProperties} from 'react';
+import {FormEvent, useEffect, useState, type CSSProperties, type ReactNode} from 'react';
 
 type View = 'home' | 'login' | 'admin' | 'resident';
 type LoginRole = 'resident' | 'committee';
