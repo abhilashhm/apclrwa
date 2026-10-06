@@ -254,3 +254,56 @@
  .receipt-modal-backdrop{position:absolute;background:#fff;padding:0}
  .receipt-actions{display:none!important}
 }
+
+
+/* UPI payment and verification UI */
+.payment-due-card,.contribution-pay-card{display:flex;align-items:center;justify-content:space-between;gap:20px;border:1px solid rgba(201,155,66,.28);background:rgba(201,155,66,.06);border-radius:14px;padding:20px}
+.payment-due-card>div,.contribution-pay-card>div:first-child{display:grid;gap:5px}
+.payment-due-card span,.contribution-pay-card span,.fee-card span{font-size:8px;color:var(--gold);font-weight:900;letter-spacing:.1em}
+.payment-due-card strong{font-size:24px;color:var(--navy)}
+.payment-due-card small,.contribution-pay-card p,.fee-card small{font-size:9px;color:var(--muted);line-height:1.5;margin:0}
+.fee-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fee-card{display:flex;align-items:center;justify-content:space-between;gap:15px;border:1px solid var(--line);border-radius:13px;padding:18px}
+.fee-card>div{display:grid;gap:5px}
+.fee-card strong{display:block;font-size:21px;color:var(--navy)}
+.contribution-pay-card{display:grid;gap:15px;margin-bottom:14px}
+.contribution-pay-card h4{font:800 15px 'Manrope';color:var(--navy);margin:1px 0}
+.contribution-input-row{display:flex;align-items:end;gap:10px}
+.contribution-input-row label{display:grid;gap:5px;flex:1}
+.contribution-input-row label span{color:var(--muted);letter-spacing:.03em}
+.contribution-input-row input{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--surface);color:var(--navy);border-radius:9px;padding:11px 12px;font:700 11px 'Manrope';outline:none}
+.contribution-input-row input:focus{border-color:var(--gold)}
+.payment-qr-modal{width:min(460px,100%);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 35px 100px rgba(0,0,0,.4)}
+.payment-qr-body{text-align:center;display:grid;justify-items:center;gap:8px;padding-top:14px}
+.upi-qr{width:280px;height:280px;image-rendering:auto;border:8px solid #fff;border-radius:8px}
+.payment-qr-body>strong{font-size:22px;color:var(--navy)}
+.payment-qr-body>small{font-size:9px;color:var(--muted)}
+.upi-id{font:800 9px 'Manrope';padding:7px 10px;border-radius:7px;background:rgba(127,127,127,.07);color:var(--navy)}
+.payment-qr-body p{font-size:9px;line-height:1.55;color:var(--muted);max-width:330px;margin:5px auto}
+.payment-qr-body p b{color:var(--navy)}
+.payment-done-button{margin-top:3px}
+.payment-pending-note{width:100%;box-sizing:border-box;border:1px solid rgba(201,155,66,.25);background:rgba(201,155,66,.08);color:var(--muted);border-radius:9px;padding:11px;font-size:9px;line-height:1.5}
+.payment-pending-note b{color:var(--gold)}
+.verification-list{display:grid;gap:8px;margin-bottom:16px}
+.verification-item{display:grid;grid-template-columns:1.5fr auto auto;align-items:center;gap:12px;border:1px solid var(--line);border-radius:11px;padding:13px}
+.verification-item>div:first-child{display:grid;gap:4px}
+.verification-item>div:first-child span{font-size:7px;color:var(--gold);font-weight:900;letter-spacing:.1em}
+.verification-item strong{font-size:10px;color:var(--navy)}
+.verification-item small{font-size:8px;color:var(--muted)}
+.status-pill.pending{background:rgba(201,155,66,.12);color:#9a721f}
+.status-pill.rejected{background:rgba(165,63,52,.1);color:#a33f35}
+.verification-actions{display:flex;gap:6px}
+.verification-actions button{border:1px solid var(--line);background:transparent;color:var(--navy);border-radius:8px;padding:8px 10px;font-size:8px;font-weight:800;cursor:pointer}
+.verification-empty{border:1px dashed var(--line);border-radius:10px;padding:18px;text-align:center;font-size:9px;color:var(--muted)}
+:root[data-theme="dark"] .payment-due-card,:root[data-theme="dark"] .contribution-pay-card{background:#171f27;border-color:rgba(225,187,103,.2)}
+:root[data-theme="dark"] .fee-card,:root[data-theme="dark"] .verification-item{background:#101820}
+:root[data-theme="dark"] .payment-qr-modal{background:#151f28}
+:root[data-theme="dark"] .upi-id{background:#202a32;color:#e7edf3}
+:root[data-theme="dark"] .payment-qr-body p b,:root[data-theme="dark"] .payment-due-card strong,:root[data-theme="dark"] .fee-card strong{color:#f0d48d}
+@media(max-width:700px){
+ .payment-due-card,.contribution-pay-card{align-items:stretch;flex-direction:column}
+ .fee-options{grid-template-columns:1fr}
+ .contribution-input-row{align-items:stretch;flex-direction:column}
+ .verification-item{grid-template-columns:1fr}
+ .verification-actions{justify-content:flex-start}
+}
