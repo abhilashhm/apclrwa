@@ -148,8 +148,8 @@ function EventMarquee({events}:{events:EventItem[]}){
   const looped=[...events,...events.slice(0,2)];
   return <div className="event-marquee">
     <div className="event-marquee-window">
-      <div className="event-marquee-track" style={{transform:`translateX(-${count*33.333333}%)`}}>
-        {looped.map((item,i)=><article className="update-card event-slide" key={item.id+'-'+i}><div className="update-meta"><span>{item.tag}</span><time>{item.date}</time></div><h3>{item.title}</h3><p>{item.text}</p><div className="event-location">⌖ {item.location}</div></article>)}
+      <div className="event-marquee-track" style={{width:`${looped.length/3*100}%`,transform:`translateX(-${count*(100/looped.length)}%)`}}>
+        {looped.map((item,i)=><article className="update-card event-slide" style={{flex:`0 0 ${100/looped.length}%`}} key={item.id+'-'+i}><div className="update-meta"><span>{item.tag}</span><time>{item.date}</time></div><h3>{item.title}</h3><p>{item.text}</p><div className="event-location">⌖ {item.location}</div></article>)}
       </div>
     </div>
     {total>3&&<div className="event-marquee-dots">{events.map((item,i)=><button key={item.id} className={i===count?'active':''} onClick={()=>setCount(i)} aria-label={`Show event ${i+1}`}/>)}</div>}
