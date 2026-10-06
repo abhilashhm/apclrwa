@@ -1,4 +1,4 @@
-import {FormEvent, useState} from 'react';
+import {FormEvent, useEffect, useState} from 'react';
 
 type View = 'home' | 'login' | 'admin';
 type LoginRole = 'resident' | 'committee';
@@ -16,6 +16,25 @@ const updates=[
 ];
 
 const DEMO_ADMIN={username:'committee.admin',password:'APC@Admin2026'};
+
+const officeBearers=[
+{name:'Sh. K Bhaskarachar',display:'Sri. K Bhaskarachar',role:'President',photo:0},
+{name:'Sh. Mahesh Krishnamurthy',display:'Sri. Mahesh Krishnamurthy',role:'General Secretary',photo:1},
+{name:'Sh. Krishna Rao',display:'Sri. Krishna Rao',role:'Vice President 1',photo:2},
+{name:'Smt. Roopa Rakesh',display:'Smt. Roopa Rakesh',role:'Vice President 2',photo:3},
+{name:'Sh. Elangovan',display:'Sri. Elangovan',role:'Joint Secretary 1',photo:4},
+{name:'Sh. Sunil Ghorpade',display:'Sri. Sunil Ghorpade',role:'Joint Secretary 2',photo:5},
+{name:'Sh. Manjunath B K',display:'Sri. Manjunath B K',role:'Organising Secretary',photo:6},
+{name:'Smt. Sowjanya',display:'Smt. Sowjanya',role:'Assistant Secretary',photo:7},
+{name:'Sh. Abhilash',display:'Sri. Abhilash',role:'Treasurer',photo:8},
+{name:'Sh. Mahesh More',display:'Sri. Mahesh More',role:'Office Secretary',photo:9},
+{name:'Sh. Srihari',display:'Sri. Srihari',role:'Executive Committee Member',photo:10},
+{name:'Sh. Nagesh Kumble',display:'Sri. Nagesh Kumble',role:'Executive Committee Member',photo:11},
+{name:'Sh. Vasudev',display:'Sri. Vasudev',role:'Executive Committee Member',photo:12},
+{name:'Sh. Vikranth Gowda',display:'Sri. Vikranth Gowda',role:'Executive Committee Member',photo:13},
+{name:'Sh. Rakesh Naidu',display:'Sri. Rakesh Naidu',role:'Executive Committee Member',photo:14}
+];
+
 
 function Logo({className='' }:{className?:string}){return <img className={className} src="./logo.svg" alt="APC Layout Residents Welfare Association logo"/>}
 
