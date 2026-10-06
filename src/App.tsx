@@ -280,13 +280,6 @@ function AdminFinancialTable({kind}:{kind:'Maintenance'|'Collections'|'Expenses'
 
 
 
- return <div className="resident-shell"><header className="resident-topbar"><div className="resident-brand"><Logo/><div><strong>APC LAYOUT</strong><span>Resident Portal</span></div></div><div className="resident-actions"><ThemeToggle/><button onClick={onLogout}>Sign out</button></div></header><main className="resident-main">
-   <section className="resident-welcome"><div><span className="welcome-kicker">MY COMMUNITY PORTAL</span><h1>Welcome home, Resident.</h1><p>Your association information, payments and community updates in one place.</p></div><WhatsAppButton/></section>
-   <div className="resident-cards"><article><span>MAINTENANCE</span><strong>₹ 12,500</strong><small>Outstanding • FY 2026–27</small><button>View payment history →</button></article><article><span>LAST PAYMENT</span><strong>₹ 8,500</strong><small>Receipt #REC-00124</small><button>View receipt →</button></article><article><span>COMMUNITY</span><strong>3 updates</strong><small>Latest notices & events</small><button>View updates →</button></article></div>
-   <section className="resident-panel"><div className="panel-head"><div><span>MY ACCOUNT</span><h3>Resident portal</h3></div></div><div className="resident-account-grid"><div><small>House / Flat</small><strong>Demo Resident</strong></div><div><small>Account status</small><strong className="account-good">Active</strong></div><div><small>Registered contact</small><strong>••••••••••</strong></div></div></section>
- </main></div>
-}
-
 function EventManager(){
  const[events,setEvents]=useState<EventItem[]>(()=>{try{return JSON.parse(localStorage.getItem('apclrwa_events')||'')||defaultEvents}catch{return defaultEvents}});
  const[modalOpen,setModalOpen]=useState(false);
