@@ -57,8 +57,15 @@ function Logo({className='' }:{className?:string}){return <img className={classN
 
 function ThemeToggle(){
   const[dark,setDark]=useState(()=>localStorage.getItem('apclrwa_theme')==='dark');
-  useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light';localStorage.setItem('apclrwa_theme',dark?'dark':'light')},[dark]);
-  return <button className="theme-toggle" onClick={()=>setDark(v=>!v)} aria-label={dark?'Switch to light mode':'Switch to dark mode'} title={dark?'Light mode':'Dark mode'}>{dark?'☀':'☾'}</button>;
+  useEffect(()=>{
+    const apply=(value:boolean)=>{setDark(value);document.documentElement.dataset.theme=value?'dark':'light'};
+    apply(localStorage.getItem('apclrwa_theme')==='dark');
+    const sync=(e:Event)=>apply((e as CustomEvent<boolean>).detail);
+    window.addEventListener('apclrwa-theme-change',sync);
+    return()=>window.removeEventListener('apclrwa-theme-change',sync);
+  },[]);
+  const toggle=()=>{const next=!dark;localStorage.setItem('apclrwa_theme',next?'dark':'light');document.documentElement.dataset.theme=next?'dark':'light';window.dispatchEvent(new CustomEvent('apclrwa-theme-change',{detail:next}))};
+  return <button className="theme-toggle" onClick={toggle} aria-label={dark?'Switch to light mode':'Switch to dark mode'} title={dark?'Light mode':'Dark mode'}>{dark?'☀':'☾'}</button>;
 }
 
 function OfficeBearerPhoto({index}:{index:number}){return <div className="ob-photo-placeholder"><span>PHOTO</span><small>Image {index+1}</small></div>}
@@ -99,7 +106,7 @@ function Home({go}:{go:(view:View)=>void}){
       <button className="menu-toggle" aria-label={menuOpen?'Close navigation':'Open navigation'} aria-expanded={menuOpen} onClick={()=>setMenuOpen(!menuOpen)}><span/><span/><span/></button>
       <nav className={menuOpen?'nav-links open':'nav-links'} aria-label="Primary navigation">
         <button onClick={()=>scrollTo('home')}>Home</button><button onClick={()=>scrollTo('community')}>Our Community</button><button onClick={()=>scrollTo('updates')}>Updates</button><button onClick={()=>scrollTo('transparency')}>Transparency</button>
-        <a href={WHATSAPP_CHANNEL} target="_blank" rel="noreferrer" className="nav-whatsapp">WhatsApp</a><button className="nav-login" onClick={()=>go('login')}>Resident / Committee Login</button>
+        <ThemeToggle/><a href={WHATSAPP_CHANNEL} target="_blank" rel="noreferrer" className="nav-whatsapp">WhatsApp</a><button className="nav-login" onClick={()=>go('login')}>Resident / Committee Login</button>
       </nav>
     </div></header>
     <main>
@@ -116,16 +123,36 @@ function Home({go}:{go:(view:View)=>void}){
 
       <section id="community" className="section community"><div className="container"><div className="section-heading"><div className="eyebrow">WHY THIS PORTAL</div><h2>Made for the people<br/><em>who make APC Layout home.</em></h2><p>Simple, useful and community-focused — the portal will grow around the everyday needs of our residents.</p></div><div className="highlight-grid">{highlights.map(item=><article className="highlight-card" key={item.title}><div className="highlight-icon">{item.icon}</div><h3>{item.title}</h3><p>{item.text}</p><span className="card-arrow">↗</span></article>)}</div></div></section>
 
-      <section id="updates" className="section updates"><div className="container"><div className="section-heading row-heading"><div><div className="eyebrow">FROM THE ASSOCIATION</div><h2>Latest <em>updates</em></h2></div><WhatsAppButton/></div><div className="updates-grid">{events.map(item=><article className="update-card" key={item.id}><div className="update-meta"><span>{item.tag}</span><time>{item.date}</time></div><h3>{item.title}</h3><p>{item.text}</p><div className="event-location">⌖ {item.location}</div></article>)}</div></div></section>
+      <section id="updates" className="section updates"><div className="container"><div className="section-heading row-heading"><div><div className="eyebrow">FROM THE ASSOCIATION</div><h2>Latest <em>updates</em></h2></div><WhatsAppButton/></div><EventMarquee events={events}/></div></section>
 
       <section id="transparency" className="section transparency"><div className="container transparency-grid"><div><div className="eyebrow light">BUILT AROUND TRUST</div><h2>Association matters should be <em>clear.</em></h2><p>From maintenance collections to community expenses, the resident portal is designed to make association information easier to access, understand and audit.</p><div className="check-list"><div><span>✓</span> Resident payment history & receipts</div><div><span>✓</span> Maintenance outstanding visibility</div><div><span>✓</span> Community collection transparency</div><div><span>✓</span> Reports designed for annual audit</div></div></div><div className="ledger-card"><div className="ledger-head"><span>ASSOCIATION SNAPSHOT</span><span className="status-dot">● LIVE DESIGN</span></div><div className="ledger-row"><span>Maintenance</span><strong>Track collections</strong></div><div className="ledger-row"><span>Community funds</span><strong>Trace every rupee</strong></div><div className="ledger-row"><span>Expenses</span><strong>Record with vouchers</strong></div><div className="ledger-row"><span>Audit</span><strong>Ready when needed</strong></div><div className="ledger-foot">Transparency is a feature, not an afterthought.</div></div></div></section>
       <section className="portal-cta"><div className="container portal-card"><div className="portal-mark">APC</div><div><div className="eyebrow">PORTAL ACCESS</div><h2>Your community services, <em>one login away.</em></h2><p>Residents can view their association information and receipts. Committee members can manage collections, expenses, events and reports.</p></div><button className="button dark" onClick={()=>go('login')}>Sign in <span>→</span></button></div></section>
       <section className="office-map"><div className="container">
         <div className="section-heading map-heading"><div className="eyebrow">VISIT US</div><h2>APCLRWA <em>Office</em></h2><p>Find the RWA office on the map.</p></div>
-        <div className="map-card"><iframe title="APCLRWA Office location" src="https://www.google.com/maps?q=13.067835919104075,77.56607799194407&z=17&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe><div className="map-caption"><strong>APC Layout Residents Welfare Association</strong><span>APC Layout, Thindlu, Bengaluru – 560097</span></div></div>
+        <div className="map-card"><iframe title="APCLRWA Office location" src="https://www.google.com/maps?q=13.067835919104075,77.56607799194407&z=17&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe><div className="map-caption"><div><strong>APC Layout Residents Welfare Association</strong><span>APC Layout, Thindlu, Bengaluru – 560097</span></div><a className="directions-button" href="https://www.google.com/maps/dir/?api=1&destination=13.067835919104075,77.56607799194407" target="_blank" rel="noreferrer">Get directions <b>↗</b></a></div></div>
       </div></section>
     </main>
     <Footer go={go} scrollTo={scrollTo}/>
+  </div>
+}
+
+function EventMarquee({events}:{events:EventItem[]}){
+  const[count,setCount]=useState(0);
+  const total=events.length;
+  useEffect(()=>{
+    if(total<=3){setCount(0);return}
+    const timer=window.setInterval(()=>setCount(v=>(v+1)%total),4200);
+    return()=>window.clearInterval(timer);
+  },[total]);
+  if(!total)return <div className="events-empty">No updates published yet.</div>;
+  const looped=[...events,...events.slice(0,2)];
+  return <div className="event-marquee">
+    <div className="event-marquee-window">
+      <div className="event-marquee-track" style={{transform:`translateX(-${count*33.333333}%)`}}>
+        {looped.map((item,i)=><article className="update-card event-slide" key={item.id+'-'+i}><div className="update-meta"><span>{item.tag}</span><time>{item.date}</time></div><h3>{item.title}</h3><p>{item.text}</p><div className="event-location">⌖ {item.location}</div></article>)}
+      </div>
+    </div>
+    {total>3&&<div className="event-marquee-dots">{events.map((item,i)=><button key={item.id} className={i===count?'active':''} onClick={()=>setCount(i)} aria-label={`Show event ${i+1}`}/>)}</div>}
   </div>
 }
 
