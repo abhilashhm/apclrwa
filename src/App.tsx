@@ -188,7 +188,98 @@ function Login({onBack,onLogin,onResidentLogin}:{onBack:()=>void;onLogin:()=>voi
  </div></div>
 }
 
+
+const residentPayments=[
+  {date:'28 Sep 2026',description:'Maintenance payment',receipt:'REC-00124',mode:'Bank transfer',amount:'₹ 8,500',status:'Paid'},
+  {date:'30 Aug 2026',description:'Maintenance payment',receipt:'REC-00111',mode:'UPI',amount:'₹ 8,500',status:'Paid'},
+  {date:'02 Aug 2026',description:'Ganesha festival donation',receipt:'REC-00119',mode:'UPI',amount:'₹ 2,000',status:'Paid'},
+  {date:'05 Jul 2026',description:'Maintenance payment',receipt:'REC-00098',mode:'Cash',amount:'₹ 8,500',status:'Paid'}
+];
+
+const residentStatement=[
+  {month:'Apr 2026',charge:'₹ 8,500',paid:'₹ 8,500',balance:'₹ 0'},
+  {month:'May 2026',charge:'₹ 8,500',paid:'₹ 8,500',balance:'₹ 0'},
+  {month:'Jun 2026',charge:'₹ 8,500',paid:'₹ 8,500',balance:'₹ 0'},
+  {month:'Jul 2026',charge:'₹ 8,500',paid:'₹ 8,500',balance:'₹ 0'},
+  {month:'Aug 2026',charge:'₹ 8,500',paid:'₹ 0',balance:'₹ 8,500'},
+  {month:'Sep 2026',charge:'₹ 8,500',paid:'₹ 0',balance:'₹ 8,500'}
+];
+
+const residentContributions=[
+  {name:'Gowri Ganesha Festival 2026',date:'18 Sep 2026',amount:'₹ 2,000',status:'Contributed'},
+  {name:'Community Development Fund',date:'10 Apr 2026',amount:'₹ 1,500',status:'Contributed'}
+];
+
+const residentUpdates=[
+  {tag:'EVENTS',title:'Gowri Ganesha Festival',text:'Festival celebrations, competitions, procession and maha prasada.',date:'18–20 Sep 2026'},
+  {tag:'NOTICE',title:'Association office hours',text:'Committee support is available for resident account queries and receipts.',date:'Ongoing'},
+  {tag:'COMMUNITY',title:'WhatsApp community channel',text:'Follow the association channel for timely updates and announcements.',date:'Ongoing'}
+];
+
+function DemoBadge(){return <span className="demo-badge">DEMO DATA</span>}
+
+function ResidentSection({title,kicker,children,action}:{title:string;kicker:string;children:ReactNode;action?:ReactNode}){
+ return <section className="resident-panel resident-section"><div className="panel-head"><div><span>{kicker}</span><h3>{title}</h3></div>{action}</div>{children}</section>
+}
+
+function ResidentPayments(){
+ const[receipt,setReceipt]=useState<typeof residentPayments[number]|null>(null);
+ return <ResidentSection kicker="PAYMENT HISTORY" title="Recent payments" action={<span className="resident-count">{residentPayments.length} records</span>}>
+   <div className="resident-table-wrap"><table className="resident-table"><thead><tr><th>Date</th><th>Description</th><th>Receipt</th><th>Mode</th><th>Amount</th><th>Status</th><th/></tr></thead><tbody>{residentPayments.map(item=><tr key={item.receipt}><td>{item.date}</td><td><strong>{item.description}</strong></td><td>{item.receipt}</td><td>{item.mode}</td><td><strong>{item.amount}</strong></td><td><span className="status-pill paid">{item.status}</span></td><td><button className="table-link" onClick={()=>setReceipt(item)}>Receipt</button></td></tr>)}</tbody></table></div>
+   {receipt&&<div className="receipt-modal-backdrop"><div className="receipt-card"><div className="receipt-head"><div><span>APCLRWA RECEIPT</span><h3>Payment receipt</h3></div><button onClick={()=>setReceipt(null)}>×</button></div><div className="receipt-logo"><Logo/><div><strong>APC Layout Residents Welfare Association</strong><small>APC Layout, Thindlu, Bengaluru – 560097</small></div></div><div className="receipt-number"><span>Receipt no.</span><strong>#{receipt.receipt}</strong></div><div className="receipt-details"><div><small>Resident</small><strong>Demo Resident</strong></div><div><small>Date</small><strong>{receipt.date}</strong></div><div><small>Payment for</small><strong>{receipt.description}</strong></div><div><small>Mode</small><strong>{receipt.mode}</strong></div><div><small>Amount</small><strong>{receipt.amount}</strong></div><div><small>Status</small><strong className="account-good">Paid</strong></div></div><div className="receipt-foot">This is a demonstration receipt. Final receipts will be generated from the accounting system.</div><div className="receipt-actions"><button onClick={()=>window.print()}>Print / Save PDF</button><button className="admin-primary" onClick={()=>setReceipt(null)}>Close</button></div></div></div>}
+ </ResidentSection>
+}
+
+function ResidentStatement(){
+ return <ResidentSection kicker="MAINTENANCE" title="FY 2026–27 statement" action={<span className="resident-count">6 months shown</span>}>
+   <div className="resident-table-wrap"><table className="resident-table"><thead><tr><th>Month</th><th>Charge</th><th>Paid</th><th>Balance</th></tr></thead><tbody>{residentStatement.map(item=><tr key={item.month}><td>{item.month}</td><td>{item.charge}</td><td>{item.paid}</td><td className={item.balance==='₹ 0'?'balance-zero':'balance-due'}><strong>{item.balance}</strong></td></tr>)}</tbody></table></div>
+   <div className="resident-summary-row"><div><span>Total charges</span><strong>₹ 51,000</strong></div><div><span>Total paid</span><strong>₹ 34,000</strong></div><div className="due"><span>Outstanding</span><strong>₹ 17,000</strong></div></div>
+ </ResidentSection>
+}
+
+function ResidentContributions(){
+ return <ResidentSection kicker="COMMUNITY FUNDS" title="Festival & community contributions" action={<span className="resident-count">{residentContributions.length} contributions</span>}>
+   <div className="resident-contribution-list">{residentContributions.map(item=><div className="resident-contribution" key={item.name}><div><strong>{item.name}</strong><small>{item.date}</small></div><div><b>{item.amount}</b><span className="status-pill paid">{item.status}</span></div></div>)}</div>
+ </ResidentSection>
+}
+
+function ResidentUpdates(){
+ return <ResidentSection kicker="FROM THE ASSOCIATION" title="Community updates" action={<WhatsAppButton/>}>
+   <div className="resident-update-grid">{residentUpdates.map(item=><article key={item.title}><div><span>{item.tag}</span><small>{item.date}</small></div><h4>{item.title}</h4><p>{item.text}</p></article>)}</div>
+ </ResidentSection>
+}
+
 function ResidentDashboard({onLogout}:{onLogout:()=>void}){
+ const[section,setSection]=useState<'Overview'|'Payments'|'Maintenance'|'Contributions'|'Updates'>('Overview');
+ const navigate=(next:typeof section)=>{setSection(next);window.scrollTo(0,0)};
+ return <div className="resident-shell"><header className="resident-topbar"><div className="resident-brand"><Logo/><div><strong>APC LAYOUT</strong><span>Resident Portal</span></div></div><nav className="resident-nav">{(['Overview','Payments','Maintenance','Contributions','Updates'] as const).map(item=><button key={item} className={section===item?'active':''} onClick={()=>navigate(item)}>{item}</button>)}</nav><div className="resident-actions"><ThemeToggle/><button onClick={onLogout}>Sign out</button></div></header>
+ <main className="resident-main">
+   <section className="resident-welcome"><div><span className="welcome-kicker">MY COMMUNITY PORTAL</span><h1>Welcome home, Resident.</h1><p>Your association information, payments and community updates in one place.</p></div><div className="resident-welcome-actions"><DemoBadge/><WhatsAppButton/></div></section>
+   {section==='Overview'&&<><div className="resident-cards"><article><span>MAINTENANCE</span><strong>₹ 17,000</strong><small>Outstanding • FY 2026–27</small><button onClick={()=>navigate('Maintenance')}>View statement →</button></article><article><span>LAST PAYMENT</span><strong>₹ 8,500</strong><small>Receipt #REC-00124</small><button onClick={()=>navigate('Payments')}>View payment history →</button></article><article><span>COMMUNITY</span><strong>3 updates</strong><small>Latest notices & events</small><button onClick={()=>navigate('Updates')}>View updates →</button></article></div><ResidentSection kicker="MY ACCOUNT" title="Resident account"><div className="resident-account-grid"><div><small>House / Flat</small><strong>Demo Resident</strong></div><div><small>Account status</small><strong className="account-good">Active</strong></div><div><small>Registered contact</small><strong>••••••••••</strong></div><div><small>Financial year</small><strong>FY 2026–27</strong></div><div><small>Membership</small><strong>Active</strong></div><div><small>Last receipt</small><strong>#REC-00124</strong></div></div></ResidentSection><ResidentUpdates/></>}
+   {section==='Payments'&&<ResidentPayments/>}
+   {section==='Maintenance'&&<ResidentStatement/>}
+   {section==='Contributions'&&<ResidentContributions/>}
+   {section==='Updates'&&<ResidentUpdates/>}
+ </main></div>
+}
+
+function AdminResidents(){
+ return <section className="admin-module-stack"><section className="admin-panel"><div className="panel-head"><div><span>RESIDENT DIRECTORY</span><h3>Residents</h3></div><button className="admin-primary">+ Add resident</button></div><p className="module-note">Demo records. In the production backend, resident accounts, property records and contacts will be maintained here with role-based access.</p><div className="resident-admin-table"><div className="resident-admin-head"><span>House</span><span>Resident</span><span>Contact</span><span>Status</span><span>Outstanding</span></div>{[['24','Demo Resident','••••••••••','Active','₹ 17,000'],['31','A. Kumar','••••••••••','Active','₹ 8,500'],['67','R. Shetty','••••••••••','Active','₹ 0'],['72','S. Rao','••••••••••','Pending','₹ 12,000']].map(row=><div className="resident-admin-row" key={row[0]}>{row.map((v,i)=><span key={i} className={i===3&&v==='Active'?'good':''}>{v}</span>)}</div>)}</div></section></section>
+}
+
+function AdminFinancialTable({kind}:{kind:'Maintenance'|'Collections'|'Expenses'|'Bank & Cash'|'Reports'|'Audit Trail'}){
+ const data=kind==='Maintenance'?[['24','FY 2026–27','₹ 51,000','₹ 34,000','₹ 17,000','Due'],['31','FY 2026–27','₹ 51,000','₹ 42,500','₹ 8,500','Due'],['67','FY 2026–27','₹ 51,000','₹ 51,000','₹ 0','Clear'],['72','FY 2026–27','₹ 51,000','₹ 39,000','₹ 12,000','Due']]
+ :kind==='Collections'?[['REC-00124','28 Sep 2026','House 24','Maintenance','₹ 8,500','Bank transfer'],['REC-00119','02 Aug 2026','House 67','Festival donation','₹ 2,000','UPI'],['REC-00111','30 Aug 2026','House 31','Maintenance','₹ 8,500','UPI']]
+ :kind==='Expenses'?[['EXP-00031','Garden maintenance','30 Sep 2026','Bank','₹ 4,200','Approved'],['EXP-00030','Electricity bill','27 Sep 2026','Bank','₹ 3,840','Approved'],['EXP-00029','Festival decoration','18 Sep 2026','Cash','₹ 6,500','Approved']]
+ :kind==='Bank & Cash'?[['30 Sep 2026','Bank – RWA A/c','Opening + receipts - expenses','₹ 2,17,000','Reconciled'],['30 Sep 2026','Cash in hand','Opening + cash receipts - cash expenses','₹ 18,500','Reconciled'],['29 Sep 2026','Bank – RWA A/c','UPI settlement','₹ 12,400','Pending reconciliation']]
+ :kind==='Reports'?[['Maintenance collection report','FY 2026–27','Collections, outstanding & defaulters','Ready'],['Income & expenditure','FY 2026–27','Income and expenses by account','Ready'],['Cash & bank book','FY 2026–27','Ledger-based cash and bank movement','Ready'],['Audit pack','FY 2025–26','Receipts, vouchers, ledger and reconciliation','Ready']]
+ :[['06 Oct 2026 21:04','committee.admin','CREATE','Maintenance receipt REC-00124'],['06 Oct 2026 20:58','committee.admin','POST','Expense voucher EXP-00031'],['06 Oct 2026 20:42','committee.admin','RECONCILE','Bank transaction #BT-00118'],['06 Oct 2026 20:15','committee.admin','LOGIN','Committee portal']];
+ const headers=kind==='Maintenance'?['House','FY','Charge','Paid','Outstanding','Status']:kind==='Collections'?['Receipt','Date','House','Type','Amount','Mode']:kind==='Expenses'?['Voucher','Description','Date','Mode','Amount','Status']:kind==='Bank & Cash'?['Date','Account','Narration','Balance','Status']:kind==='Reports'?['Report','FY','Coverage','Status']:['Timestamp','User','Action','Entity'];
+ return <section className="admin-module-stack"><section className="admin-panel"><div className="panel-head"><div><span>{kind.toUpperCase()}</span><h3>{kind}</h3></div><DemoBadge/></div><p className="module-note">{kind==='Reports'?'Reports will be generated from the immutable accounting ledger.':'Demo records shown for UI validation; production values will come from the FastAPI + SQLite backend.'}</p><div className="admin-data-table-wrap"><table className="admin-data-table"><thead><tr>{headers.map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{data.map((row,i)=><tr key={i}>{row.map((v,j)=><td key={j} className={(v==='Clear'||v==='Reconciled'||v==='Ready'||v==='Approved')?'good-cell':(v==='Due'||v==='Pending reconciliation')?'warn-cell':''}>{v}</td>)}</tr>)}</tbody></table></div>{kind==='Reports'&&<div className="report-actions"><button>Export CSV</button><button>Export PDF</button><button className="admin-primary">Generate audit pack</button></div>}</section></section>
+}
+
+
+
  return <div className="resident-shell"><header className="resident-topbar"><div className="resident-brand"><Logo/><div><strong>APC LAYOUT</strong><span>Resident Portal</span></div></div><div className="resident-actions"><ThemeToggle/><button onClick={onLogout}>Sign out</button></div></header><main className="resident-main">
    <section className="resident-welcome"><div><span className="welcome-kicker">MY COMMUNITY PORTAL</span><h1>Welcome home, Resident.</h1><p>Your association information, payments and community updates in one place.</p></div><WhatsAppButton/></section>
    <div className="resident-cards"><article><span>MAINTENANCE</span><strong>₹ 12,500</strong><small>Outstanding • FY 2026–27</small><button>View payment history →</button></article><article><span>LAST PAYMENT</span><strong>₹ 8,500</strong><small>Receipt #REC-00124</small><button>View receipt →</button></article><article><span>COMMUNITY</span><strong>3 updates</strong><small>Latest notices & events</small><button>View updates →</button></article></div>
@@ -223,15 +314,21 @@ function AdminDashboard({onLogout}:{onLogout:()=>void}){
  const nav=['Overview','Residents','Maintenance','Collections','Expenses','Bank & Cash','Reports','Events','Audit Trail'];
  const stats=fyStats[selectedFY]||fyStats['2026–27'];
  const switchFY=(fy:string)=>{setSelectedFY(fy);localStorage.setItem('apclrwa_selected_fy',fy)};
+ const renderModule=()=>{
+   if(section==='Residents')return <AdminResidents/>;
+   if(['Maintenance','Collections','Expenses','Bank & Cash','Reports','Audit Trail'].includes(section))return <AdminFinancialTable kind={section as 'Maintenance'|'Collections'|'Expenses'|'Bank & Cash'|'Reports'|'Audit Trail'}/>;
+   if(section==='Events')return <EventManager/>;
+   return null;
+ };
  return <div className="admin-shell">
    <aside className="admin-sidebar"><div className="admin-brand"><Logo/><div><strong>APC LAYOUT</strong><span>Committee Portal</span></div></div><div className="admin-user"><div className="admin-avatar">CA</div><div><strong>Committee Admin</strong><span>Administrator</span></div></div><nav className="admin-nav">{nav.map(item=><button key={item} className={section===item?'active':''} onClick={()=>setSection(item)}><span className="nav-icon">{({Overview:'⌂',Residents:'♙',Maintenance:'₹',Collections:'▣',Expenses:'↘','Bank & Cash':'▤',Reports:'▥',Events:'✦','Audit Trail':'✓'} as Record<string,string>)[item]}</span>{item}</button>)}</nav><button className="admin-logout" onClick={onLogout}>↪ Sign out</button></aside>
    <main className="admin-main"><header className="admin-topbar"><button className="mobile-admin-brand" onClick={()=>setSection('Overview')}><Logo/></button><div><div className="eyebrow">APC LAYOUT • COMMITTEE PORTAL</div><h1>{section}</h1></div><div className="admin-top-actions"><ThemeToggle/><label className="fy-switch"><span>Financial year</span><select value={selectedFY} onChange={e=>switchFY(e.target.value)}>{financialYears.map(fy=><option key={fy} value={fy}>FY {fy}</option>)}</select></label><div className="admin-profile">CA</div></div></header>
    {section==='Overview'?<><div className="admin-welcome"><div><span className="welcome-kicker">GOOD AFTERNOON</span><h2>Welcome back, Committee Admin.</h2><p>Association snapshot for <strong>FY {selectedFY}</strong>.</p></div><button className="admin-primary" onClick={()=>setSection('Events')}>+ Add homepage event</button></div>
    <div className="admin-stats">{stats.map(([value,label])=><div className="admin-stat" key={label}><span>{label}</span><strong>{value}</strong><small>Demo data • FY {selectedFY}</small></div>)}</div>
-   <div className="admin-grid"><section className="admin-panel"><div className="panel-head"><div><span>FINANCIAL ACTIVITY</span><h3>Recent transactions</h3></div><button>View ledger →</button></div><div className="transaction-list"><div><span className="txn-icon income">↓</span><div><strong>Maintenance payment</strong><small>House 24 • Receipt #REC-00124</small></div><b className="amount-positive">+ ₹8,500</b></div><div><span className="txn-icon expense">↑</span><div><strong>Garden maintenance</strong><small>Voucher #EXP-00031 • Bank</small></div><b className="amount-negative">− ₹4,200</b></div><div><span className="txn-icon income">↓</span><div><strong>Ganesha festival donation</strong><small>House 67 • Receipt #REC-00119</small></div><b className="amount-positive">+ ₹2,000</b></div><div><span className="txn-icon expense">↑</span><div><strong>Electricity bill</strong><small>Voucher #EXP-00030 • Bank</small></div><b className="amount-negative">− ₹3,840</b></div></div></section>
+   <div className="admin-grid"><section className="admin-panel"><div className="panel-head"><div><span>FINANCIAL ACTIVITY</span><h3>Recent transactions</h3></div><button onClick={()=>setSection('Reports')}>View reports →</button></div><div className="transaction-list"><div><span className="txn-icon income">↓</span><div><strong>Maintenance payment</strong><small>House 24 • Receipt #REC-00124</small></div><b className="amount-positive">+ ₹8,500</b></div><div><span className="txn-icon expense">↑</span><div><strong>Garden maintenance</strong><small>Voucher #EXP-00031 • Bank</small></div><b className="amount-negative">− ₹4,200</b></div><div><span className="txn-icon income">↓</span><div><strong>Ganesha festival donation</strong><small>House 67 • Receipt #REC-00119</small></div><b className="amount-positive">+ ₹2,000</b></div><div><span className="txn-icon expense">↑</span><div><strong>Electricity bill</strong><small>Voucher #EXP-00030 • Bank</small></div><b className="amount-negative">− ₹3,840</b></div></div></section>
    <section className="admin-panel"><div className="panel-head"><div><span>ATTENTION</span><h3>Tasks to review</h3></div></div><div className="task-list"><div><i className="task-dot red"/>12 residents have maintenance outstanding</div><div><i className="task-dot gold"/>5 bank transactions need reconciliation</div><div><i className="task-dot green"/>FY 2025–26 audit pack is ready</div><div><i className="task-dot blue"/>3 new resident records to verify</div></div></section></div>
-   <section className="admin-panel quick-panel"><div className="panel-head"><div><span>QUICK ACTIONS</span><h3>Common committee tasks</h3></div></div><div className="quick-actions"><button onClick={()=>setSection('Residents')}>+ Add resident</button><button>₹ Record maintenance</button><button>↓ Record collection</button><button>↗ Record expense</button><button>▣ Import bank statement</button><button>✦ Add homepage event</button></div></section>
-   </>:section==='Events'?<EventManager/>:<section className="admin-placeholder"><div className="placeholder-icon">✦</div><div className="eyebrow">COMMITTEE MODULE</div><h2>{section}</h2><p>The {section.toLowerCase()} module is scaffolded into the committee portal. This screen is ready to connect to the FastAPI + SQLite accounting backend.</p><button className="admin-primary" onClick={()=>setSection('Overview')}>← Back to overview</button></section>}
+   <section className="admin-panel quick-panel"><div className="panel-head"><div><span>QUICK ACTIONS</span><h3>Common committee tasks</h3></div></div><div className="quick-actions"><button onClick={()=>setSection('Residents')}>+ Add resident</button><button onClick={()=>setSection('Maintenance')}>₹ Record maintenance</button><button onClick={()=>setSection('Collections')}>↓ Record collection</button><button onClick={()=>setSection('Expenses')}>↗ Record expense</button><button onClick={()=>setSection('Bank & Cash')}>▣ Bank & cash</button><button onClick={()=>setSection('Events')}>✦ Add homepage event</button></div></section>
+   </>:renderModule()}
    <footer className="admin-footer">APC Layout Residents Welfare Association • FY {selectedFY} • Committee access • <button onClick={onLogout}>Sign out</button></footer>
    </main>
  </div>
