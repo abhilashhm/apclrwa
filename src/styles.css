@@ -122,8 +122,8 @@
 /* Homepage events marquee + map directions + stronger financial contrast */
 .event-marquee{width:100%;overflow:hidden}
 .event-marquee-window{width:100%;overflow:hidden}
-.event-marquee-track{display:flex;align-items:stretch;transition:transform .75s cubic-bezier(.22,.8,.25,1);will-change:transform}
-.event-slide{box-sizing:border-box;min-width:0;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:8px}
+.event-marquee-track{display:flex;align-items:stretch;width:calc(100% * var(--event-total) / 3);transform:translateX(calc(-1 * var(--event-index) * 100% / var(--event-total)));transition:transform .75s cubic-bezier(.22,.8,.25,1);will-change:transform}
+.event-slide{box-sizing:border-box;min-width:calc(100% / var(--event-total));flex:0 0 calc(100% / var(--event-total));margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:8px}
 .event-slide::after{content:"";display:block}
 .event-slide{background:transparent}
 .event-slide>div,.event-slide>h3,.event-slide>p{margin-left:10px;margin-right:10px}
@@ -138,5 +138,5 @@
 :root[data-theme="dark"] .admin-stat strong{color:#f0d48d}
 :root[data-theme="dark"] .event-slide{background:#17232d;border-color:var(--line)!important}
 :root[data-theme="dark"] .event-marquee-dots button{background:#586671}
-@media(max-width:900px){.event-slide{flex-basis:50%!important}.event-marquee-track{width:calc(100% * var(--event-track-scale, 2))!important}.map-caption .directions-button{justify-self:start}}
-@media(max-width:560px){.event-slide{flex-basis:100%!important}.event-marquee-track{width:calc(100% * var(--event-track-scale, 1))!important}.event-slide{padding:0;margin-bottom:8px!important}.event-slide>div,.event-slide>h3,.event-slide>p{margin-left:0;margin-right:0}}
+@media(max-width:900px){.event-marquee-track{width:calc(100% * var(--event-total) / 2)}.map-caption .directions-button{justify-self:start}}
+@media(max-width:560px){.event-marquee-track{width:calc(100% * var(--event-total))}.event-slide{padding:0 0 8px}.event-slide>div,.event-slide>h3,.event-slide>p{margin-left:0;margin-right:0}}
