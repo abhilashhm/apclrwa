@@ -19,6 +19,25 @@ const DEMO_ADMIN={username:'committee.admin',password:'APC@Admin2026'};
 
 function Logo({className='' }:{className?:string}){return <img className={className} src="./logo.svg" alt="APC Layout Residents Welfare Association logo"/>}
 
+function ThemeToggle(){
+  const[dark,setDark]=useState(()=>localStorage.getItem('apclrwa_theme')==='dark');
+  useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light';localStorage.setItem('apclrwa_theme',dark?'dark':'light')},[dark]);
+  return <button className="theme-toggle" onClick={()=>setDark(v=>!v)} aria-label={dark?'Switch to light mode':'Switch to dark mode'} title={dark?'Light mode':'Dark mode'}>{dark?'☀':'☾'}</button>;
+}
+function OfficeBearerPhoto({index}:{index:number}){return <div className="ob-photo-placeholder"><span>PHOTO</span><small>Image {index+1}</small></div>}
+function OfficeBearers(){
+  const[open,setOpen]=useState(false);
+  return <section className="office-bearers"><div className="container">
+    <div className="section-heading ob-heading"><div className="eyebrow">OUR ASSOCIATION</div><h2>APCLRWA <em>Office Bearers</em></h2><p>Meet the association office bearers serving APC Layout. The full list is available below.</p></div>
+    <div className="ob-feature-grid">{officeBearers.slice(0,2).map(person=><article className="ob-card featured" key={person.name}><OfficeBearerPhoto index={person.photo}/><div className="ob-info"><h3>{person.display}</h3><p>{person.role}</p></div></article>)}</div>
+    <button className="button primary ob-see-all" onClick={()=>setOpen(true)}>See the rest <span>→</span></button>
+  </div>
+  {open&&<div className="ob-modal-backdrop" role="dialog" aria-modal="true" onMouseDown={e=>{if(e.target===e.currentTarget)setOpen(false)}}><div className="ob-modal">
+    <div className="ob-modal-head"><div><div className="eyebrow">APCLRWA 2025–2027</div><h2>Office Bearers</h2></div><button className="ob-close" onClick={()=>setOpen(false)}>×</button></div>
+    <div className="ob-modal-grid">{officeBearers.map(person=><article className="ob-card" key={person.name}><OfficeBearerPhoto index={person.photo}/><div className="ob-info"><h3>{person.display}</h3><p>{person.role}</p></div></article>)}</div>
+  </div></div>}
+</section>;
+}
 function Home({go}:{go:(view:View)=>void}){
   const[menuOpen,setMenuOpen]=useState(false);
   const scrollTo=(id:string)=>{document.getElementById(id)?.scrollIntoView({behavior:'smooth'});setMenuOpen(false)};
