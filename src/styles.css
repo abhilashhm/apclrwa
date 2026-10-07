@@ -378,3 +378,15 @@
 :root[data-theme="dark"] .site-shell .ob-see-all{background:#f4c44f;color:#101820!important}
 :root[data-theme="dark"] .site-shell .event-marquee-dots button{color:transparent!important}
 @media(max-width:700px){.payment-detail-grid,.balance-strip,.report-grid{grid-template-columns:1fr}.report-card{align-items:flex-start;flex-direction:column}.report-card>div:last-child{justify-content:flex-start}}
+
+
+/* Resident lifecycle and Tally-style accounting */
+.resident-admin-head,.resident-admin-row{grid-template-columns:.65fr .9fr 1.35fr 1.15fr .8fr .8fr .8fr}
+.table-action-group{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.danger-link{border:1px solid rgba(177,75,47,.28)!important;background:rgba(177,75,47,.06)!important;color:#a33f35!important;border-radius:8px;padding:7px 9px;font-size:8px;font-weight:800;cursor:pointer}
+.danger-link:hover{background:rgba(177,75,47,.12)!important}
+:root[data-theme="dark"] .danger-link{color:#ff9f91!important;border-color:rgba(255,159,145,.24)!important;background:rgba(177,75,47,.12)!important}
+:root[data-theme="dark"] .report-card button,:root[data-theme="dark"] .report-preview>button,:root[data-theme="dark"] .verification-actions button,:root[data-theme="dark"] .table-link{color:#f0d48d}
+:root[data-theme="dark"] .resident-admin-row .good{color:#9dcca7}
+:root[data-theme="dark"] .resident-admin-row .warn-cell{color:#ff9f91!important}
+@media(max-width:900px){.resident-admin-table{overflow:auto}.resident-admin-head,.resident-admin-row{min-width:820px}}
