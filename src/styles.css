@@ -459,3 +459,6 @@
 :root:not([data-theme="dark"]) .resident-form-grid select{color:#4b575e}
 :root:not([data-theme="dark"]) .resident-form-grid input,
 :root:not([data-theme="dark"]) .resident-form-grid select{background:#fff!important;border-color:rgba(16,43,69,.15)}
+
+.resident-overview-alert{margin:0 0 16px}.resident-overview-alert .table-link{justify-self:start;color:#a33f35}
+:root[data-theme="dark"] .resident-overview-alert .table-link{color:#ff9f91}
