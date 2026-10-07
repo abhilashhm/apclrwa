@@ -161,7 +161,7 @@ function Footer({go,scrollTo}:{go:(v:View)=>void;scrollTo:(id:string)=>void}){
  return <footer className="footer"><div className="container footer-grid"><div className="footer-brand"><Logo/><div><strong>APC LAYOUT RESIDENTS<br/>WELFARE ASSOCIATION</strong><p>APC Layout, Thindlu<br/>Bengaluru – 560097</p><WhatsAppButton/></div></div><div className="footer-links"><strong>Community</strong><button onClick={()=>scrollTo('community')}>Our Community</button><button onClick={()=>scrollTo('updates')}>Updates</button><button onClick={()=>scrollTo('transparency')}>Transparency</button></div><div className="footer-links"><strong>Portal</strong><button onClick={()=>go('login')}>Resident Login</button><button onClick={()=>go('login')}>Committee Login</button><button onClick={()=>go('login')}>Help & Support</button></div></div><div className="container footer-bottom"><span>© {new Date().getFullYear()} APC Layout Residents Welfare Association</span><span>Built for our community, with care.</span></div></footer>
 }
 
-function Login({onBack,onLogin,onResidentLogin}:{onBack:()=>void;onLogin:()=>void;onResidentLogin:()=>void}){
+function Login({onBack,onLogin,onResidentLogin}:{onBack:()=>void;onLogin:()=>void;onResidentLogin:(username:string)=>void}){
  const[role,setRole]=useState<LoginRole>('resident');
  const[username,setUsername]=useState('');
  const[password,setPassword]=useState('');
@@ -169,7 +169,7 @@ function Login({onBack,onLogin,onResidentLogin}:{onBack:()=>void;onLogin:()=>voi
  const[error,setError]=useState('');
  const submit=(e:FormEvent)=>{e.preventDefault();setError('');
    if(role==='committee'&&username===DEMO_ADMIN.username&&password===DEMO_ADMIN.password){localStorage.setItem('apclrwa_admin_session','true');onLogin();return}
-   if(role==='resident'&&username===DEMO_RESIDENT.username&&password===DEMO_RESIDENT.password){localStorage.setItem('apclrwa_resident_session','true');onResidentLogin();return}
+   if(role==='resident'&&username===DEMO_RESIDENT.username&&password===DEMO_RESIDENT.password){localStorage.setItem('apclrwa_resident_session','true');onResidentLogin(username);return}
    setError('Invalid credentials. Please check your details and try again.');
  };
  return <div className="auth-page"><div className="auth-decoration auth-left"/><div className="auth-decoration auth-right"/><button className="auth-back" onClick={onBack}>← Back to website</button><div className="auth-card resident-auth-card">
