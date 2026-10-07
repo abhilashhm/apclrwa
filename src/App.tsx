@@ -260,7 +260,7 @@ const OPENING_BALANCES_KEY='apclrwa_opening_balances';
 const DONATION_TYPES=['Ganesha Festival','Sri Rama Navami'];
 const demoResident:ResidentRecord={id:'RES-DEMO',house:'24',cross:'2nd Cross',name:'Demo Resident',mobile:'9876543210',password:'APC@Resident2026',initialCharge:500,initialChargePaid:true,membershipPayment:{date:'2026-09-01',mode:'UPI',details:'Demo membership payment'},active:true,createdAt:'2026-09-01T00:00:00.000Z'};
 const defaultExpenseTypes=['Electricity','Garden maintenance','Security','Cleaning','Repairs & maintenance','Festival decoration','Office expenses','Water / utility','Other'];
-function getResidents():ResidentRecord[]{try{const x=JSON.parse(localStorage.getItem('apclrwa_residents')||'[]');return Array.isArray(x)&&x.length?x:[demoResident]}catch{return[demoResident]}}
+function getResidents():ResidentRecord[]{try{const x=JSON.parse(localStorage.getItem('apclrwa_residents')||'[]');if(!Array.isArray(x)||!x.length)return[demoResident];return x.map((r:any)=>({...r,cross:r.cross||'',active:r.active!==false}))}catch{return[demoResident]}}
 function saveResidents(x:ResidentRecord[]){localStorage.setItem('apclrwa_residents',JSON.stringify(x));window.dispatchEvent(new Event('apclrwa-residents-change'))}
 function getLedger():LedgerEntry[]{try{const x=JSON.parse(localStorage.getItem('apclrwa_admin_ledger')||'[]');return Array.isArray(x)?x:[]}catch{return[]}}
 function saveLedger(x:LedgerEntry[]){localStorage.setItem('apclrwa_admin_ledger',JSON.stringify(x));window.dispatchEvent(new Event('apclrwa-ledger-change'))}
