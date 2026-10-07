@@ -349,3 +349,12 @@
 .resident-card-due{border-color:rgba(177,75,47,.35)!important;background:rgba(177,75,47,.055)!important}
 .resident-card-due strong{color:#b14b2f!important}
 @media(max-width:700px){.resident-form-grid{grid-template-columns:1fr}.resident-modal{padding:18px}}
+
+/* Final admin contrast tuning: avoid low-contrast blue text in light mode */
+.admin-main,.admin-shell{color:#1b252b}
+.admin-panel h3,.admin-stat strong,.transaction-list strong,.quick-actions button,.resident-admin-row span{color:#1b252b}
+.admin-panel .module-note,.admin-stat small,.admin-stat span,.transaction-list small{color:#4b575e}
+.admin-panel .panel-head>button:not(.admin-primary),.table-link{color:#9a6a00}
+.quick-actions button:hover,.admin-panel .panel-head>button:not(.admin-primary):hover{color:#b57a00}
+:root[data-theme="dark"] .admin-main,:root[data-theme="dark"] .admin-shell{color:#f3f7fa}
+:root[data-theme="dark"] .admin-panel h3,:root[data-theme="dark"] .admin-stat strong,:root[data-theme="dark"] .transaction-list strong,:root[data-theme="dark"] .quick-actions button,:root[data-theme="dark"] .resident-admin-row span{color:#f3f7fa}
