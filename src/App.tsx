@@ -75,7 +75,14 @@ export default function App(){
 }function AdminPaymentVerification(){
  const[items,setItems]=useState<any[]>(getPendingPayments());
  useEffect(()=>{const sync=()=>setItems(getPendingPayments());window.addEventListener('apclrwa-payments-change',sync);return()=>window.removeEventListener('apclrwa-payments-change',sync)},[]);
- const review=(id:string,status:'Approved'|'Rejected')=>{const next=getPendingPayments().map((p:any)=>p.id===id?{...p,status,reviewedAt:new Date().toISOString(),reviewedBy:'committee.admin'}:p);savePendingPayments(next);setItems(next)};
+ const review=(id:string,status:'Approved'|'Rejected')=>{
+   const current=getPendingPayments().find((p:any)=>p.id===id);
+   const next=getPendingPayments().map((p:any)=>p.id===id?{...p,status,reviewedAt:new Date().toISOString(),reviewedBy:'committee.admin'}:p);
+   if(status==='Approved'&&current?.type==='Membership'){
+     const residents=getResidents().map(r=>r.house===current.house?{...r,initialChargePaid:true}:r);saveResidents(residents);
+   }
+   savePendingPayments(next);setItems(next);
+ };
  return <div className="verification-list">{items.length===0?<div className="verification-empty">No community payments awaiting verification.</div>:items.map((p:any)=><div className="verification-item" key={p.id}><div><span>{p.type}</span><strong>{p.resident} • House {p.house}</strong><small>{p.date} • {p.amount} • {p.id}</small></div><span className={p.status==='Pending verification'?'status-pill pending':p.status==='Approved'?'status-pill paid':'status-pill rejected'}>{p.status}</span>{p.status==='Pending verification'&&<div className="verification-actions"><button onClick={()=>review(p.id,'Rejected')}>Reject</button><button className="admin-primary" onClick={()=>review(p.id,'Approved')}>Approve</button></div>}</div>)}</div>
 }
 
