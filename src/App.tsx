@@ -1,3 +1,7 @@
+import {useEffect,useMemo,useState} from 'react';
+import type {CSSProperties,FormEvent} from 'react';
+import QRCode from 'qrcode';
+
 
 function AdminEntryForm({kind,onClose}:{kind:'Maintenance'|'Collections'|'Expenses'|'Bank & Cash';onClose:()=>void}){
  const[amount,setAmount]=useState(kind==='Maintenance'?'1000':'');const[house,setHouse]=useState('');const[description,setDescription]=useState('');const[mode,setMode]=useState(kind==='Bank & Cash'?'Contra (Bank → Cash)':'UPI');const[error,setError]=useState('');
