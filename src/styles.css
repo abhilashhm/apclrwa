@@ -427,3 +427,35 @@
   .report-preview .admin-data-table{color:#111!important}
   .report-preview .admin-data-table th,.report-preview .admin-data-table td{color:#111!important;background:#fff!important;border-color:#ccc!important}
 }
+
+
+/* Final light-mode admin surface lock: keep cards/modals light when the page is light */
+:root:not([data-theme="dark"]) .admin-shell,
+:root:not([data-theme="dark"]) .admin-main{background:#f5f3ed!important;color:#1b252b}
+:root:not([data-theme="dark"]) .admin-panel,
+:root:not([data-theme="dark"]) .admin-stat,
+:root:not([data-theme="dark"]) .admin-events-panel,
+:root:not([data-theme="dark"]) .admin-placeholder,
+:root:not([data-theme="dark"]) .resident-modal,
+:root:not([data-theme="dark"]) .payment-qr-modal,
+:root:not([data-theme="dark"]) .receipt-card,
+:root:not([data-theme="dark"]) .event-modal,
+:root:not([data-theme="dark"]) .report-preview{background:#fffdf8!important;color:#1b252b}
+:root:not([data-theme="dark"]) .admin-panel h3,
+:root:not([data-theme="dark"]) .admin-stat strong,
+:root:not([data-theme="dark"]) .transaction-list strong,
+:root:not([data-theme="dark"]) .resident-admin-row span,
+:root:not([data-theme="dark"]) .resident-form-grid>label,
+:root:not([data-theme="dark"]) .resident-charge-option label,
+:root:not([data-theme="dark"]) .event-modal-head h2,
+:root:not([data-theme="dark"]) .receipt-head h3,
+:root:not([data-theme="dark"]) .payment-qr-body>strong{color:#1b252b!important}
+:root:not([data-theme="dark"]) .admin-panel .module-note,
+:root:not([data-theme="dark"]) .admin-stat small,
+:root:not([data-theme="dark"]) .admin-stat span,
+:root:not([data-theme="dark"]) .transaction-list small,
+:root:not([data-theme="dark"]) .admin-data-table td,
+:root:not([data-theme="dark"]) .resident-form-grid input,
+:root:not([data-theme="dark"]) .resident-form-grid select{color:#4b575e}
+:root:not([data-theme="dark"]) .resident-form-grid input,
+:root:not([data-theme="dark"]) .resident-form-grid select{background:#fff!important;border-color:rgba(16,43,69,.15)}
