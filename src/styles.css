@@ -307,3 +307,45 @@
  .verification-item{grid-template-columns:1fr}
  .verification-actions{justify-content:flex-start}
 }
+
+/* Accessibility, UPI visibility, resident registration and Tally-style entries */
+.upi-instruction{
+  width:min(360px,100%);box-sizing:border-box;padding:11px 14px;border-radius:9px;
+  background:rgba(28,79,110,.88);color:#fff!important;font-size:10px;line-height:1.55;
+  border:1px solid rgba(255,255,255,.18);box-shadow:0 6px 20px rgba(0,0,0,.16);
+}
+.upi-instruction b{color:#fff!important}
+.admin-primary{background:#e7a928!important;color:#101820!important;border-color:#e7a928!important;font-weight:900}
+.admin-primary:hover{background:#ffd15a!important;color:#0b1720!important}
+.quick-actions button,.panel-head>button,.report-actions button,.event-admin-row button{color:#12334a}
+.admin-panel .panel-head>button:not(.admin-primary){color:#0d6b91}
+.admin-main,.admin-shell{color:#173047}
+.admin-panel h3,.admin-stat strong,.transaction-list strong,.quick-actions button,.resident-admin-row span{color:#173047}
+.admin-panel .module-note,.admin-stat small,.admin-stat span,.transaction-list small{color:#496477}
+.good-cell{color:#147a4b!important}.warn-cell{color:#b14b2f!important}
+:root[data-theme="dark"] .admin-primary{background:#f4c44f!important;color:#101820!important;border-color:#f4c44f!important}
+:root[data-theme="dark"] .admin-primary:hover{background:#ffe08a!important}
+:root[data-theme="dark"] .admin-panel h3,:root[data-theme="dark"] .admin-stat strong,:root[data-theme="dark"] .transaction-list strong,:root[data-theme="dark"] .quick-actions button,:root[data-theme="dark"] .resident-admin-row span{color:#f3f7fa}
+:root[data-theme="dark"] .admin-panel .module-note,:root[data-theme="dark"] .admin-stat small,:root[data-theme="dark"] .admin-stat span,:root[data-theme="dark"] .transaction-list small{color:#b8c6cf}
+:root[data-theme="dark"] .admin-panel .panel-head>button:not(.admin-primary){color:#66d4ff}
+:root[data-theme="dark"] .quick-actions button{background:#182631;border-color:rgba(255,255,255,.15)}
+:root[data-theme="dark"] .upi-instruction{background:rgba(17,105,143,.96);color:#fff!important}
+.resident-modal-backdrop{position:fixed;inset:0;z-index:210;background:rgba(4,12,18,.76);backdrop-filter:blur(5px);display:grid;place-items:center;padding:20px}
+.resident-modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 35px 100px rgba(0,0,0,.45)}
+.resident-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:18px}
+.resident-form-grid>label,.resident-charge-option{display:grid;gap:6px;font-size:9px;font-weight:800;color:var(--navy)}
+.resident-form-grid input,.resident-form-grid select{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--surface);color:var(--navy);border-radius:9px;padding:11px 12px;font:600 10px 'Manrope';outline:none}
+.resident-form-grid input:focus,.resident-form-grid select:focus{border-color:var(--gold)}
+.resident-charge-option{padding:14px;border:1px solid rgba(201,155,66,.28);background:rgba(201,155,66,.07);border-radius:10px}
+.resident-charge-option small{font-size:8px;color:var(--muted);font-weight:600}
+.resident-charge-option label{display:flex;align-items:center;gap:7px;font-size:9px;color:var(--navy)}
+.resident-charge-option input{width:auto}
+.entry-help{padding:12px 14px;margin-top:14px;border-radius:9px;background:rgba(18,111,145,.08);border:1px solid rgba(18,111,145,.2);color:var(--navy);font-size:9px;line-height:1.55}
+:root[data-theme="dark"] .resident-modal{background:#151f28}
+:root[data-theme="dark"] .resident-form-grid>label,:root[data-theme="dark"] .resident-charge-option,:root[data-theme="dark"] .resident-charge-option label,:root[data-theme="dark"] .entry-help{color:#eef3f7}
+:root[data-theme="dark"] .resident-form-grid input,:root[data-theme="dark"] .resident-form-grid select{background:#101820;color:#eef3f7;border-color:rgba(231,237,243,.15)}
+:root[data-theme="dark"] .resident-charge-option{background:#202a22;border-color:rgba(225,187,103,.22)}
+:root[data-theme="dark"] .entry-help{background:#122833;border-color:rgba(102,212,255,.2)}
+.resident-card-due{border-color:rgba(177,75,47,.35)!important;background:rgba(177,75,47,.055)!important}
+.resident-card-due strong{color:#b14b2f!important}
+@media(max-width:700px){.resident-form-grid{grid-template-columns:1fr}.resident-modal{padding:18px}}
