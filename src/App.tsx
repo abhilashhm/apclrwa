@@ -361,18 +361,6 @@ export default function App(){
 
 
 
-function AdminFinancialTable({kind}:{kind:'Maintenance'|'Collections'|'Expenses'|'Bank & Cash'|'Reports'|'Audit Trail'}){
- const data=kind==='Maintenance'?[['24','FY 2026–27','₹ 51,000','₹ 34,000','₹ 17,000','Due'],['31','FY 2026–27','₹ 51,000','₹ 42,500','₹ 8,500','Due'],['67','FY 2026–27','₹ 51,000','₹ 51,000','₹ 0','Clear'],['72','FY 2026–27','₹ 51,000','₹ 39,000','₹ 12,000','Due']]
- :kind==='Collections'?[['REC-00124','28 Sep 2026','House 24','Maintenance','₹ 8,500','Bank transfer'],['REC-00119','02 Aug 2026','House 67','Festival donation','₹ 2,000','UPI'],['REC-00111','30 Aug 2026','House 31','Maintenance','₹ 8,500','UPI']]
- :kind==='Expenses'?[['EXP-00031','Garden maintenance','30 Sep 2026','Bank','₹ 4,200','Approved'],['EXP-00030','Electricity bill','27 Sep 2026','Bank','₹ 3,840','Approved'],['EXP-00029','Festival decoration','18 Sep 2026','Cash','₹ 6,500','Approved']]
- :kind==='Bank & Cash'?[['30 Sep 2026','Bank – RWA A/c','Opening + receipts - expenses','₹ 2,17,000','Reconciled'],['30 Sep 2026','Cash in hand','Opening + cash receipts - cash expenses','₹ 18,500','Reconciled'],['29 Sep 2026','Bank – RWA A/c','UPI settlement','₹ 12,400','Pending reconciliation']]
- :kind==='Reports'?[['Maintenance collection report','FY 2026–27','Collections, outstanding & defaulters','Ready'],['Income & expenditure','FY 2026–27','Income and expenses by account','Ready'],['Cash & bank book','FY 2026–27','Ledger-based cash and bank movement','Ready'],['Audit pack','FY 2025–26','Receipts, vouchers, ledger and reconciliation','Ready']]
- :[['06 Oct 2026 21:04','committee.admin','CREATE','Maintenance receipt REC-00124'],['06 Oct 2026 20:58','committee.admin','POST','Expense voucher EXP-00031'],['06 Oct 2026 20:42','committee.admin','RECONCILE','Bank transaction #BT-00118'],['06 Oct 2026 20:15','committee.admin','LOGIN','Committee portal']];
- const headers=kind==='Maintenance'?['House','FY','Charge','Paid','Outstanding','Status']:kind==='Collections'?['Receipt','Date','House','Type','Amount','Mode']:kind==='Expenses'?['Voucher','Description','Date','Mode','Amount','Status']:kind==='Bank & Cash'?['Date','Account','Narration','Balance','Status']:kind==='Reports'?['Report','FY','Coverage','Status']:['Timestamp','User','Action','Entity'];
- return <section className="admin-module-stack"><section className="admin-panel"><div className="panel-head"><div><span>{kind.toUpperCase()}</span><h3>{kind}</h3></div><DemoBadge/></div><p className="module-note">{kind==='Reports'?'Reports will be generated from the immutable accounting ledger.':'Demo records shown for UI validation; production values will come from the FastAPI + SQLite backend.'}</p><div className="admin-data-table-wrap"><table className="admin-data-table"><thead><tr>{headers.map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{data.map((row,i)=><tr key={i}>{row.map((v,j)=><td key={j} className={(v==='Clear'||v==='Reconciled'||v==='Ready'||v==='Approved')?'good-cell':(v==='Due'||v==='Pending reconciliation')?'warn-cell':''}>{v}</td>)}</tr>)}</tbody></table></div>{kind==='Reports'&&<div className="report-actions"><button>Export CSV</button><button>Export PDF</button><button className="admin-primary">Generate audit pack</button></div>}</section></section>
-}
-
-
 
 function EventManager(){
  const[events,setEvents]=useState<EventItem[]>(()=>{try{return JSON.parse(localStorage.getItem('apclrwa_events')||'')||defaultEvents}catch{return defaultEvents}});
