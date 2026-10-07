@@ -359,9 +359,7 @@ export default function App(){
 
 
 
-function AdminResidents(){
- return <section className="admin-module-stack"><section className="admin-panel"><div className="panel-head"><div><span>RESIDENT DIRECTORY</span><h3>Residents</h3></div><button className="admin-primary">+ Add resident</button></div><p className="module-note">Demo records. In the production backend, resident accounts, property records and contacts will be maintained here with role-based access.</p><div className="resident-admin-table"><div className="resident-admin-head"><span>House</span><span>Resident</span><span>Contact</span><span>Status</span><span>Outstanding</span></div>{[['24','Demo Resident','••••••••••','Active','₹ 17,000'],['31','A. Kumar','••••••••••','Active','₹ 8,500'],['67','R. Shetty','••••••••••','Active','₹ 0'],['72','S. Rao','••••••••••','Pending','₹ 12,000']].map(row=><div className="resident-admin-row" key={row[0]}>{row.map((v,i)=><span key={i} className={i===3&&v==='Active'?'good':''}>{v}</span>)}</div>)}</div></section></section>
-}
+
 
 function AdminFinancialTable({kind}:{kind:'Maintenance'|'Collections'|'Expenses'|'Bank & Cash'|'Reports'|'Audit Trail'}){
  const data=kind==='Maintenance'?[['24','FY 2026–27','₹ 51,000','₹ 34,000','₹ 17,000','Due'],['31','FY 2026–27','₹ 51,000','₹ 42,500','₹ 8,500','Due'],['67','FY 2026–27','₹ 51,000','₹ 51,000','₹ 0','Clear'],['72','FY 2026–27','₹ 51,000','₹ 39,000','₹ 12,000','Due']]
