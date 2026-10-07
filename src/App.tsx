@@ -361,68 +361,7 @@ export default function App(){
 
 
 
-
-function EventManager(){
- const[events,setEvents]=useState<EventItem[]>(()=>{try{return JSON.parse(localStorage.getItem('apclrwa_events')||'')||defaultEvents}catch{return defaultEvents}});
- const[modalOpen,setModalOpen]=useState(false);
- const[editing,setEditing]=useState<EventItem|null>(null);
- const[form,setForm]=useState<EventItem>({id:'',tag:'EVENTS',title:'',text:'',date:'',location:'APC Layout'});
- const startAdd=()=>{setEditing(null);setForm({id:crypto.randomUUID(),tag:'EVENTS',title:'',text:'',date:'',location:'APC Layout'});setModalOpen(true)};
- const startEdit=(item:EventItem)=>{setEditing(item);setForm(item);setModalOpen(true)};
- const close=()=>{setModalOpen(false);setEditing(null)};
- const save=(e:FormEvent)=>{e.preventDefault();const next=editing?events.map(x=>x.id===form.id?form:x):[...events,form];setEvents(next);localStorage.setItem('apclrwa_events',JSON.stringify(next));close()};
- const remove=(id:string)=>{const next=events.filter(x=>x.id!==id);setEvents(next);localStorage.setItem('apclrwa_events',JSON.stringify(next))};
- return <section className="admin-events-panel"><div className="panel-head"><div><span>HOMEPAGE CONTENT</span><h3>Events & announcements</h3></div><button className="admin-primary" onClick={startAdd}>+ Add event</button></div>
-   <p className="module-note">Events added here appear on the public homepage under Latest Updates.</p>
-   <div className="event-admin-list">{events.map(item=><div className="event-admin-row" key={item.id}><div><span>{item.tag}</span><strong>{item.title}</strong><small>{item.date} • {item.location}</small></div><div><button onClick={()=>startEdit(item)}>Edit</button><button className="danger-link" onClick={()=>remove(item.id)}>Delete</button></div></div>)}</div>
-   {modalOpen&&<div className="event-modal-backdrop"><form className="event-modal" onSubmit={save}><div className="event-modal-head"><div><div className="eyebrow">{editing?'EDIT HOMEPAGE ITEM':'NEW HOMEPAGE ITEM'}</div><h2>{editing?'Edit event / announcement':'Add event / announcement'}</h2></div><button type="button" onClick={close}>×</button></div><EventForm form={form} setForm={setForm}/><div className="event-modal-actions"><button type="button" onClick={close}>Cancel</button><button className="admin-primary" type="submit">{editing?'Save changes':'Publish to homepage'}</button></div></form></div>}
- </section>
-}
-function EventForm({form,setForm}:{form:EventItem;setForm:(v:EventItem)=>void}){
- const update=(key:keyof EventItem,value:string)=>setForm({...form,[key]:value});
- return <div className="event-form"><label>Category<input value={form.tag} onChange={e=>update('tag',e.target.value)} placeholder="EVENTS"/></label><label>Title<input value={form.title} onChange={e=>update('title',e.target.value)} placeholder="Community event title" required/></label><label>Description<textarea value={form.text} onChange={e=>update('text',e.target.value)} placeholder="What should residents know?" required/></label><div className="event-form-grid"><label>Date / time<input value={form.date} onChange={e=>update('date',e.target.value)} placeholder="18 October 2026"/></label><label>Location<input value={form.location} onChange={e=>update('location',e.target.value)} placeholder="APC Layout"/></label></div></div>
-}
-
-function AdminDashboard({onLogout}:{onLogout:()=>void}){
- const[section,setSection]=useState('Overview');
- const[selectedFY,setSelectedFY]=useState(()=>localStorage.getItem('apclrwa_selected_fy')||'2026–27');
- const nav=['Overview','Residents','Maintenance','Collections','Expenses','Bank & Cash','Reports','Events','Audit Trail'];
- const stats=fyStats[selectedFY]||fyStats['2026–27'];
- const switchFY=(fy:string)=>{setSelectedFY(fy);localStorage.setItem('apclrwa_selected_fy',fy)};
- const renderModule=()=>{
-   if(section==='Residents')return <AdminResidents/>;
-   if(['Maintenance','Collections','Expenses','Bank & Cash','Reports','Audit Trail'].includes(section))return <AdminFinancialTable kind={section as 'Maintenance'|'Collections'|'Expenses'|'Bank & Cash'|'Reports'|'Audit Trail'}/>;
-   if(section==='Events')return <EventManager/>;
-   return null;
- };
- return <div className="admin-shell">
-   <aside className="admin-sidebar"><div className="admin-brand"><Logo/><div><strong>APC LAYOUT</strong><span>Committee Portal</span></div></div><div className="admin-user"><div className="admin-avatar">CA</div><div><strong>Committee Admin</strong><span>Administrator</span></div></div><nav className="admin-nav">{nav.map(item=><button key={item} className={section===item?'active':''} onClick={()=>setSection(item)}><span className="nav-icon">{({Overview:'⌂',Residents:'♙',Maintenance:'₹',Collections:'▣',Expenses:'↘','Bank & Cash':'▤',Reports:'▥',Events:'✦','Audit Trail':'✓'} as Record<string,string>)[item]}</span>{item}</button>)}</nav><button className="admin-logout" onClick={onLogout}>↪ Sign out</button></aside>
-   <main className="admin-main"><header className="admin-topbar"><button className="mobile-admin-brand" onClick={()=>setSection('Overview')}><Logo/></button><div><div className="eyebrow">APC LAYOUT • COMMITTEE PORTAL</div><h1>{section}</h1></div><div className="admin-top-actions"><ThemeToggle/><label className="fy-switch"><span>Financial year</span><select value={selectedFY} onChange={e=>switchFY(e.target.value)}>{financialYears.map(fy=><option key={fy} value={fy}>FY {fy}</option>)}</select></label><div className="admin-profile">CA</div></div></header>
-   {section==='Overview'?<><div className="admin-welcome"><div><span className="welcome-kicker">GOOD AFTERNOON</span><h2>Welcome back, Committee Admin.</h2><p>Association snapshot for <strong>FY {selectedFY}</strong>.</p></div><button className="admin-primary" onClick={()=>setSection('Events')}>+ Add homepage event</button></div>
-   <div className="admin-stats">{stats.map(([value,label])=><div className="admin-stat" key={label}><span>{label}</span><strong>{value}</strong><small>Demo data • FY {selectedFY}</small></div>)}</div>
-   <div className="admin-grid"><section className="admin-panel"><div className="panel-head"><div><span>FINANCIAL ACTIVITY</span><h3>Recent transactions</h3></div><button onClick={()=>setSection('Reports')}>View reports →</button></div><div className="transaction-list"><div><span className="txn-icon income">↓</span><div><strong>Maintenance payment</strong><small>House 24 • Receipt #REC-00124</small></div><b className="amount-positive">+ ₹8,500</b></div><div><span className="txn-icon expense">↑</span><div><strong>Garden maintenance</strong><small>Voucher #EXP-00031 • Bank</small></div><b className="amount-negative">− ₹4,200</b></div><div><span className="txn-icon income">↓</span><div><strong>Ganesha festival donation</strong><small>House 67 • Receipt #REC-00119</small></div><b className="amount-positive">+ ₹2,000</b></div><div><span className="txn-icon expense">↑</span><div><strong>Electricity bill</strong><small>Voucher #EXP-00030 • Bank</small></div><b className="amount-negative">− ₹3,840</b></div></div></section>
-   <section className="admin-panel"><div className="panel-head"><div><span>ATTENTION</span><h3>Tasks to review</h3></div></div><div className="task-list"><div><i className="task-dot red"/>12 residents have maintenance outstanding</div><div><i className="task-dot gold"/>5 bank transactions need reconciliation</div><div><i className="task-dot green"/>FY 2025–26 audit pack is ready</div><div><i className="task-dot blue"/>3 new resident records to verify</div></div></section></div>
-   <section className="admin-panel quick-panel"><div className="panel-head"><div><span>QUICK ACTIONS</span><h3>Common committee tasks</h3></div></div><div className="quick-actions"><button onClick={()=>setSection('Residents')}>+ Add resident</button><button onClick={()=>setSection('Maintenance')}>₹ Record maintenance</button><button onClick={()=>setSection('Collections')}>↓ Record collection</button><button onClick={()=>setSection('Expenses')}>↗ Record expense</button><button onClick={()=>setSection('Bank & Cash')}>▣ Bank & cash</button><button onClick={()=>setSection('Events')}>✦ Add homepage event</button></div></section>
-   </>:renderModule()}
-   <footer className="admin-footer">APC Layout Residents Welfare Association • FY {selectedFY} • Committee access • <button onClick={onLogout}>Sign out</button></footer>
-   </main>
- </div>
-}
-
-export default function App(){
- const[signedIn,setSignedIn]=useState(()=>localStorage.getItem('apclrwa_admin_session')==='true');
- const[residentSignedIn,setResidentSignedIn]=useState(()=>localStorage.getItem('apclrwa_resident_session')==='true');
- const[view,setView]=useState<View>(()=>localStorage.getItem('apclrwa_admin_session')==='true'?'admin':localStorage.getItem('apclrwa_resident_session')==='true'?'resident':'home');
- const go=(next:View)=>{setView(next);window.scrollTo(0,0)};
- const login=()=>{setSignedIn(true);setView('admin');window.scrollTo(0,0)};
- const residentLogin=()=>{setResidentSignedIn(true);setView('resident');window.scrollTo(0,0)};
- const logout=()=>{localStorage.removeItem('apclrwa_admin_session');setSignedIn(false);setView('home')};
- const residentLogout=()=>{localStorage.removeItem('apclrwa_resident_session');setResidentSignedIn(false);setView('home')};
- if(signedIn&&view==='admin')return <AdminDashboard onLogout={logout}/>;
- if(residentSignedIn&&view==='resident')return <ResidentDashboard onLogout={residentLogout}/>;
- if(view==='login')return <Login onBack={()=>go('home')} onLogin={login} onResidentLogin={residentLogin}/>;
- return <Home go={go}/>;
-}function AdminPaymentVerification(){
+function AdminPaymentVerification(){
  const[items,setItems]=useState<any[]>(getPendingPayments());
  useEffect(()=>{const sync=()=>setItems(getPendingPayments());window.addEventListener('apclrwa-payments-change',sync);return()=>window.removeEventListener('apclrwa-payments-change',sync)},[]);
  const review=(id:string,status:'Approved'|'Rejected')=>{const next=getPendingPayments().map((p:any)=>p.id===id?{...p,status,reviewedAt:new Date().toISOString(),reviewedBy:'committee.admin'}:p);savePendingPayments(next);setItems(next)};
