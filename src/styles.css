@@ -358,3 +358,23 @@
 .quick-actions button:hover,.admin-panel .panel-head>button:not(.admin-primary):hover{color:#b57a00}
 :root[data-theme="dark"] .admin-main,:root[data-theme="dark"] .admin-shell{color:#f3f7fa}
 :root[data-theme="dark"] .admin-panel h3,:root[data-theme="dark"] .admin-stat strong,:root[data-theme="dark"] .transaction-list strong,:root[data-theme="dark"] .quick-actions button,:root[data-theme="dark"] .resident-admin-row span{color:#f3f7fa}
+
+/* Accounting workflow enhancements */
+.modal-close{width:34px;height:34px;border:1px solid var(--line);background:transparent;color:var(--navy);border-radius:50%;font-size:20px;cursor:pointer}
+.inline-field{display:flex;gap:6px;align-items:stretch}.inline-field select{flex:1}.small-action{border:1px solid var(--line);background:rgba(201,155,66,.1);color:var(--navy);border-radius:8px;padding:0 10px;font-size:8px;font-weight:900;cursor:pointer;white-space:nowrap}
+.payment-detail-grid{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:9px;text-align:left;margin:5px 0}.payment-detail-grid label{display:grid;gap:4px;font-size:8px;color:var(--muted);font-weight:800}.payment-detail-grid input,.payment-detail-grid select{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--surface);color:var(--navy);border-radius:8px;padding:9px;font:600 9px 'Manrope'}
+.balance-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}.balance-strip>div{padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--surface);display:grid;gap:5px}.balance-strip span{font-size:8px;color:var(--muted);font-weight:900;letter-spacing:.1em}.balance-strip strong{font-size:22px;color:var(--navy)}
+.report-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.report-card{border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;justify-content:space-between;gap:12px;align-items:center;background:rgba(127,127,127,.025)}.report-card>div:first-child{display:grid;gap:5px}.report-card strong{font-size:11px;color:var(--navy)}.report-card small{font-size:8px;color:var(--muted)}.report-card>div:last-child{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.report-card button,.report-preview>button{border:1px solid var(--line);background:transparent;color:var(--navy);border-radius:8px;padding:8px 10px;font-size:8px;font-weight:800;cursor:pointer}.report-preview{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:16px;background:rgba(127,127,127,.025)}.report-preview h4{font:800 15px 'Manrope';color:var(--navy);margin:5px 0}.report-preview p{font-size:9px;color:var(--muted)}
+/* Homepage dark-mode contrast: force interactive controls away from white-on-white */
+:root[data-theme="dark"] .site-shell button:not(.theme-toggle),:root[data-theme="dark"] .site-shell a.nav-whatsapp{color:#f4f7fa}
+:root[data-theme="dark"] .site-shell .button.primary{background:#f4c44f;color:#101820!important;border-color:#f4c44f}
+:root[data-theme="dark"] .site-shell .button.secondary{background:#182631;color:#f4f7fa!important;border-color:rgba(244,196,79,.45)}
+:root[data-theme="dark"] .site-shell .button.dark{background:#f4c44f;color:#101820!important}
+:root[data-theme="dark"] .site-shell .nav-login{background:#f4c44f!important;color:#101820!important;border-color:#f4c44f!important}
+:root[data-theme="dark"] .site-shell .nav-whatsapp{background:#182631;color:#f4f7fa!important;border-color:rgba(255,255,255,.16)}
+:root[data-theme="dark"] .site-shell .footer-links button{background:transparent;color:#dce5eb!important}
+:root[data-theme="dark"] .site-shell .directions-button{background:#f4c44f;color:#101820!important}
+:root[data-theme="dark"] .site-shell .whatsapp-button{background:#18332b;color:#e8fff3!important;border-color:rgba(144,220,177,.3)}
+:root[data-theme="dark"] .site-shell .ob-see-all{background:#f4c44f;color:#101820!important}
+:root[data-theme="dark"] .site-shell .event-marquee-dots button{color:transparent!important}
+@media(max-width:700px){.payment-detail-grid,.balance-strip,.report-grid{grid-template-columns:1fr}.report-card{align-items:flex-start;flex-direction:column}.report-card>div:last-child{justify-content:flex-start}}
