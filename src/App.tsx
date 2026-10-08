@@ -56,7 +56,7 @@ const defaultOfficeBearers=[
 
 const OFFICE_BEARERS_KEY='apclrwa_office_bearers';
 type OfficeBearer={name:string;display:string;role:string;phone:string;image?:string};
-function getOfficeBearers():OfficeBearer[]{try{const x=JSON.parse(localStorage.getItem(OFFICE_BEARERS_KEY)||'null');return Array.isArray(x)?x:defaultOfficeBearers}catch{return defaultOfficeBearers}}
+function getOfficeBearers():OfficeBearer[]{try{const x=JSON.parse(localStorage.getItem(OFFICE_BEARERS_KEY)||'null');const people=Array.isArray(x)?x:defaultOfficeBearers;return people.filter((p:any)=>p.name!=='Sh. Vikranth Gowda'&&p.display!=='Sri. Vikranth Gowda')}catch{return defaultOfficeBearers}}
 function saveOfficeBearers(x:OfficeBearer[]){localStorage.setItem(OFFICE_BEARERS_KEY,JSON.stringify(x));window.dispatchEvent(new Event('apclrwa-ob-change'))}
 
 function Logo({className='' }:{className?:string}){return <img className={className} src="/logo1.svg" alt="APC Layout Residents Welfare Association logo"/>}
