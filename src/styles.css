@@ -526,3 +526,32 @@
 [data-theme="dark"] .event-modal-actions>button:first-child{background:#17232d;color:#f4f7fb}
 [data-theme="dark"] .admin-primary,[data-theme="dark"] .login-submit,[data-theme="dark"] .event-modal-actions>button:not(:first-child),[data-theme="dark"] .quick-actions button,[data-theme="dark"] .resident-actions>button:not(.theme-toggle){background:#f3bf43;color:#0a1724;border-color:#f8d36d}
 @media(max-width:850px){.resident-ob-grid{grid-template-columns:1fr}.ob-admin-grid{grid-template-columns:1fr}}
+
+/* Landing page dark-mode contrast */
+[data-theme="dark"] .top-strip{background:#06111b;color:#d9e2e8}
+[data-theme="dark"] .top-strip-note{color:#f3d27b}
+[data-theme="dark"] .hero-card-caption{background:#101c25}
+[data-theme="dark"] .hero-card-caption strong{color:#f4f7fb}
+[data-theme="dark"] .hero-card-caption small{color:#c2ced6}
+[data-theme="dark"] .floating-note{background:#101c25;border-color:rgba(255,255,255,.13);box-shadow:0 15px 35px rgba(0,0,0,.28)}
+[data-theme="dark"] .floating-note strong{color:#f4f7fb}
+[data-theme="dark"] .floating-note small{color:#c2ced6}
+[data-theme="dark"] .floating-note>span{background:#263442;color:#f3d27b}
+[data-theme="dark"] .transparency{background:#07141f}
+[data-theme="dark"] .transparency p{color:#c7d2da}
+[data-theme="dark"] .check-list{color:#e3eaf0}
+[data-theme="dark"] .ledger-card{background:#12222e;border-color:rgba(255,255,255,.16)}
+[data-theme="dark"] .ledger-head{color:#bdc9d1}
+[data-theme="dark"] .ledger-row{color:#c8d2da}
+[data-theme="dark"] .ledger-row strong{color:#fff}
+[data-theme="dark"] .ledger-foot{color:#f3d27b}
+[data-theme="dark"] .office-map{background:#0c1720}
+[data-theme="dark"] .map-caption{background:#12222e;color:#eef3f7}
+[data-theme="dark"] .map-caption strong{color:#fff}
+[data-theme="dark"] .map-caption span{color:#c7d2da}
+[data-theme="dark"] .update-card-image{display:block;width:100%;height:150px;object-fit:cover;border-radius:14px 14px 0 0;margin:-24px -24px 18px;width:calc(100% + 48px)}
+.event-link{display:inline-block;margin-top:12px;color:var(--gold);font-size:10px;font-weight:800;text-decoration:none}
+.event-private-toggle{display:flex!important;align-items:center;gap:8px}
+.event-private-toggle input{width:auto!important}
+.footer-brand .whatsapp-button{margin-top:14px}
+@media(max-width:700px){[data-theme="dark"] .hero-card-caption{background:#101c25}.update-card-image{height:130px}}
