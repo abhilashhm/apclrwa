@@ -50,7 +50,7 @@ const officeBearers=[
 {name:'Sh. Srihari',display:'Sri. Srihari',role:'Executive Committee Member',phone:''},
 {name:'Sh. Nagesh Kumble',display:'Sri. Nagesh Kumble',role:'Executive Committee Member',phone:''},
 {name:'Sh. Vasudev',display:'Sri. Vasudev',role:'Executive Committee Member',phone:''},
-{name:'Sh. Vikranth Gowda',display:'Sri. Vikranth Gowda',role:'Executive Committee Member',phone:''},
+
 {name:'Sh. Rakesh Naidu',display:'Sri. Rakesh Naidu',role:'Executive Committee Member',phone:''}
 ];
 
@@ -169,13 +169,18 @@ const UPI_CUSTOM='upi://pay?pa=1584602006555@cnrb&pn=A P C LAYOUT RESIDENTS WELF
 function getPendingPayments():any[]{try{return JSON.parse(localStorage.getItem('apclrwa_pending_payments')||'[]')}catch{return[]}}
 function savePendingPayments(items:any[]){localStorage.setItem('apclrwa_pending_payments',JSON.stringify(items));window.dispatchEvent(new Event('apclrwa-payments-change'))}
 function getCurrentResident():ResidentRecord{const mobile=localStorage.getItem('apclrwa_resident_username')||DEMO_RESIDENT.username;return getResidents().find(r=>r.mobile===mobile)||demoResident}
+function currentResidentPayments(r:ResidentRecord){return getPendingPayments().filter(p=>(p.mobile===r.mobile)||(p.resident===r.name&&p.house===r.house))}
+function residentMaintenanceStatus(r:ResidentRecord,fy='2026–27'){const posted=getLedger().filter(x=>x.kind==='Maintenance'&&x.house===r.house&&x.financialYear===fy&&x.status==='Posted');const pending=currentResidentPayments(r).filter(p=>p.type==='Maintenance'&&p.financialYear===fy);if(posted.length)return{status:'Paid',amount:posted.reduce((s,x)=>s+x.amount,0)};if(pending.some(p=>p.status==='Pending verification'))return{status:'Pending verification',amount:pending.reduce((s,p)=>s+Number(p.numericAmount||0),0)};if(pending.some(p=>p.status==='Rejected'))return{status:'Rejected',amount:0};return{status:new Date().getMonth()>=11?'Due':'Upcoming',amount:0}}
+function formatMoney(n:number){return '₹ '+n.toLocaleString('en-IN')}
+
 function entryCreatedTime(x:{createdAt?:string;date?:string;id?:string}){const t=x.createdAt?new Date(x.createdAt).getTime():x.date?new Date(x.date).getTime():0;return Number.isNaN(t)?0:t}
 function PaymentQR({type,amount,onClose}:{type:'membership'|'amc'|'contribution';amount:number;onClose:()=>void}){
  const[qr,setQr]=useState('');const[submitted,setSubmitted]=useState(false);
  const upi=type==='membership'?UPI_500:type==='amc'?UPI_1000:UPI_CUSTOM.replace('&am=0&','&am='+amount+'&');
- useEffect(()=>{QRCode.toDataURL(upi,{width:280,margin:2,errorCorrectionLevel:'M'}).then(setQr)},[upi]);
+ useEffect(()=>{QRCode.toDataURL(upi,{width:280,margin:2,errorCorrectionLevel:'M'}).then(setQr);const timer=window.setTimeout(onClose,60000);return()=>window.clearTimeout(timer)},[upi,onClose]);
  const title=type==='membership'?'One-time membership fee':type==='amc'?'Annual maintenance charge':'Festival / community contribution';
- const submit=()=>{if(type!=='contribution')return;const r=getCurrentResident();const now=new Date();const items=getPendingPayments();items.push({id:'PAY-'+Date.now(),resident:r.name,mobile:r.mobile,house:r.house,type:'Contribution',amount:'₹ '+amount.toLocaleString('en-IN'),numericAmount:amount,date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),createdAt:now.toISOString(),status:'Pending verification',financialYear:'2026–27',mode:'UPI'});savePendingPayments(items);setSubmitted(true)};
+ const paymentType=type==='amc'?'Maintenance':type==='membership'?'Membership':'Contribution';
+ const submit=()=>{if(submitted)return;const r=getCurrentResident();const now=new Date();const items=getPendingPayments();items.push({id:'PAY-'+Date.now(),resident:r.name,mobile:r.mobile,house:r.house,type:paymentType,amount:'₹ '+amount.toLocaleString('en-IN'),numericAmount:amount,date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),transactionDate:now.toISOString().slice(0,10),createdAt:now.toISOString(),status:'Pending verification',financialYear:'2026–27',mode:'UPI',details:type==='amc'?'Annual maintenance payment':type==='membership'?'Membership fee payment':'Community contribution'});savePendingPayments(items);setSubmitted(true)};
  return <div className="receipt-modal-backdrop"><div className="payment-qr-modal"><div className="receipt-head"><div><span>UPI PAYMENT</span><h3>{title}</h3></div><button onClick={onClose}>×</button></div><div className="payment-qr-body">{qr?<img className="upi-qr" src={qr} alt="UPI payment QR code"/>:<div>Generating QR…</div>}<strong>₹ {amount.toLocaleString('en-IN')}</strong><small>Scan with any UPI app</small><div className="upi-id">1584602006555@cnrb</div><p>Once the payment is done, <b>post the payment screenshot in the WhatsApp group.</b></p>{type==='contribution'&&!submitted&&<button className="admin-primary" onClick={submit}>I have made the payment</button>}{submitted&&<div className="payment-pending-note">Payment marked <b>Pending verification</b>.</div>}<WhatsAppButton/></div></div></div>
 }
 
@@ -262,14 +267,14 @@ function ResidentDashboard({onLogout}:{onLogout:()=>void}){
 
 
 type PaymentDetails={date:string;mode:string;details:string};
-type ResidentRecord={id:string;house:string;cross:string;name:string;mobile:string;password:string;initialCharge:number;initialChargePaid:boolean;membershipPayment?:PaymentDetails;active:boolean;createdAt:string};
+type ResidentRecord={id:string;house:string;cross:string;name:string;mobile:string;password:string;initialCharge:number;initialChargePaid:boolean;membershipPayment?:PaymentDetails;active:boolean;createdAt:string;tempPassword?:boolean};
 type LedgerEntry={id:string;kind:string;amount:number;house?:string;description:string;mode:string;date:string;financialYear:string;status:string;expenseType?:string;direction?:string;donorName?:string;donationType?:string;createdAt?:string};
 type OpeningBalances={bank:number;cash:number;financialYear:string;date:string};
 
 const EXPENSE_TYPES_KEY='apclrwa_expense_types';
 const OPENING_BALANCES_KEY='apclrwa_opening_balances';
 const DONATION_TYPES=['Ganesha Festival','Sri Rama Navami'];
-const demoResident:ResidentRecord={id:'RES-DEMO',house:'24',cross:'2nd Cross',name:'Demo Resident',mobile:'9876543210',password:'APC@Resident2026',initialCharge:500,initialChargePaid:true,membershipPayment:{date:'2026-09-01',mode:'UPI',details:'Demo membership payment'},active:true,createdAt:'2026-09-01T00:00:00.000Z'};
+const demoResident:ResidentRecord={id:'RES-DEMO',house:'24',cross:'2nd Cross',name:'Demo Resident',mobile:'9876543210',password:'APC@Resident2026',initialCharge:500,initialChargePaid:true,membershipPayment:{date:'2026-09-01',mode:'UPI',details:'Demo membership payment'},active:true,createdAt:'2026-09-01T00:00:00.000Z',tempPassword:false};
 const defaultExpenseTypes=['Electricity','Garden maintenance','Security','Cleaning','Repairs & maintenance','Festival decoration','Office expenses','Water / utility','Other'];
 function getResidents():ResidentRecord[]{try{const x=JSON.parse(localStorage.getItem('apclrwa_residents')||'[]');if(!Array.isArray(x)||!x.length)return[demoResident];return x.map((r:any)=>({...r,cross:r.cross||'',active:r.active!==false}))}catch{return[demoResident]}}
 function saveResidents(x:ResidentRecord[]){localStorage.setItem('apclrwa_residents',JSON.stringify(x));window.dispatchEvent(new Event('apclrwa-residents-change'))}
