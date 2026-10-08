@@ -4,14 +4,7 @@ import QRCode from 'qrcode';
 type View = 'home' | 'login' | 'admin' | 'resident' | 'resident-password';
 type LoginRole = 'resident' | 'committee';
 
-type EventItem = {
-  id: string;
-  tag: string;
-  title: string;
-  text: string;
-  date: string;
-  location: string;
-};
+type EventItem = { id:string; tag:string; title:string; text:string; date:string; location:string; image?:string; link?:string; residentsOnly?:boolean; createdAt?:string };
 
 const highlights=[
   {icon:'🏡',title:'A connected neighbourhood',text:'A common digital home for residents, families and the association committee.'},
@@ -130,7 +123,7 @@ function Home({go}:{go:(view:View)=>void}){
 
       <section id="community" className="section community"><div className="container"><div className="section-heading"><div className="eyebrow">WHY THIS PORTAL</div><h2>Made for the people<br/><em>who make APC Layout home.</em></h2><p>Simple, useful and community-focused — the portal will grow around the everyday needs of our residents.</p></div><div className="highlight-grid">{highlights.map(item=><article className="highlight-card" key={item.title}><div className="highlight-icon">{item.icon}</div><h3>{item.title}</h3><p>{item.text}</p><span className="card-arrow">↗</span></article>)}</div></div></section>
 
-      <section id="updates" className="section updates"><div className="container"><div className="section-heading row-heading"><div><div className="eyebrow">FROM THE ASSOCIATION</div><h2>Latest <em>updates</em></h2></div><WhatsAppButton/></div><EventMarquee events={events}/></div></section>
+      <section id="updates" className="section updates"><div className="container"><div className="section-heading row-heading"><div><div className="eyebrow">FROM THE ASSOCIATION</div><h2>Latest <em>updates</em></h2></div><WhatsAppButton/></div><EventMarquee events={events} residentOnly/></div></section>
 
       <section id="transparency" className="section transparency"><div className="container transparency-grid"><div><div className="eyebrow light">BUILT AROUND TRUST</div><h2>Association matters should be <em>clear.</em></h2><p>From maintenance collections to community expenses, the resident portal is designed to make association information easier to access, understand and audit.</p><div className="check-list"><div><span>✓</span> Resident payment history & receipts</div><div><span>✓</span> Maintenance outstanding visibility</div><div><span>✓</span> Community collection transparency</div><div><span>✓</span> Reports designed for annual audit</div></div></div><div className="ledger-card"><div className="ledger-head"><span>ASSOCIATION SNAPSHOT</span><span className="status-dot">● LIVE DESIGN</span></div><div className="ledger-row"><span>Maintenance</span><strong>Track collections</strong></div><div className="ledger-row"><span>Community funds</span><strong>Trace every rupee</strong></div><div className="ledger-row"><span>Expenses</span><strong>Record with vouchers</strong></div><div className="ledger-row"><span>Audit</span><strong>Ready when needed</strong></div><div className="ledger-foot">Transparency is a feature, not an afterthought.</div></div></div></section>
       <section className="portal-cta"><div className="container portal-card"><div className="portal-mark">APC</div><div><div className="eyebrow">PORTAL ACCESS</div><h2>Your community services, <em>one login away.</em></h2><p>Residents can view their association information and receipts. Committee members can manage collections, expenses, events and reports.</p></div><button className="button dark" onClick={()=>go('login')}>Sign in <span>→</span></button></div></section>
@@ -143,16 +136,17 @@ function Home({go}:{go:(view:View)=>void}){
   </div>
 }
 
-function EventMarquee({events}:{events:EventItem[]}){
+function EventMarquee({events,residentOnly=false}:{events:EventItem[];residentOnly?:boolean}){
   const[count,setCount]=useState(0);
-  const total=events.length;
+  const visibleEvents=events.filter(e=>residentOnly?true:!e.residentsOnly);
+  const total=visibleEvents.length;
   useEffect(()=>{
     if(total<=3){setCount(0);return}
     const timer=window.setInterval(()=>setCount(v=>(v+1)%total),4200);
     return()=>window.clearInterval(timer);
   },[total]);
   if(!total)return <div className="events-empty">No updates published yet.</div>;
-  const looped=[...events,...events.slice(0,2)];
+  const looped=[...visibleEvents,...visibleEvents.slice(0,2)];
   return <div className="event-marquee">
     <div className="event-marquee-window">
       <div className="event-marquee-track" style={{'--event-total':looped.length,'--event-index':count} as CSSProperties}>
@@ -426,8 +420,8 @@ function EventManager(){
  const[events,setEvents]=useState<EventItem[]>(()=>{try{return JSON.parse(localStorage.getItem('apclrwa_events')||'')||defaultEvents}catch{return defaultEvents}});
  const[modalOpen,setModalOpen]=useState(false);
  const[editing,setEditing]=useState<EventItem|null>(null);
- const[form,setForm]=useState<EventItem>({id:'',tag:'EVENTS',title:'',text:'',date:'',location:'APC Layout'});
- const startAdd=()=>{setEditing(null);setForm({id:crypto.randomUUID(),tag:'EVENTS',title:'',text:'',date:'',location:'APC Layout'});setModalOpen(true)};
+ const[form,setForm]=useState<EventItem>({id:'',tag:'EVENTS',title:'',text:'',date:'',location:'APC Layout',image:'',link:'',residentsOnly:false,createdAt:new Date().toISOString()});
+ const startAdd=()=>{setEditing(null);setForm({id:crypto.randomUUID(),tag:'EVENTS',title:'',text:'',date:'',location:'APC Layout',image:'',link:'',residentsOnly:false,createdAt:new Date().toISOString()});setModalOpen(true)};
  const startEdit=(item:EventItem)=>{setEditing(item);setForm(item);setModalOpen(true)};
  const close=()=>{setModalOpen(false);setEditing(null)};
  const save=(e:FormEvent)=>{e.preventDefault();const next=editing?events.map(x=>x.id===form.id?form:x):[...events,form];setEvents(next);localStorage.setItem('apclrwa_events',JSON.stringify(next));close()};
@@ -439,8 +433,9 @@ function EventManager(){
  </section>
 }
 function EventForm({form,setForm}:{form:EventItem;setForm:(v:EventItem)=>void}){
- const update=(key:keyof EventItem,value:string)=>setForm({...form,[key]:value});
- return <div className="event-form"><label>Category<input value={form.tag} onChange={e=>update('tag',e.target.value)} placeholder="EVENTS"/></label><label>Title<input value={form.title} onChange={e=>update('title',e.target.value)} placeholder="Community event title" required/></label><label>Description<textarea value={form.text} onChange={e=>update('text',e.target.value)} placeholder="What should residents know?" required/></label><div className="event-form-grid"><label>Date / time<input value={form.date} onChange={e=>update('date',e.target.value)} placeholder="18 October 2026"/></label><label>Location<input value={form.location} onChange={e=>update('location',e.target.value)} placeholder="APC Layout"/></label></div></div>
+ const update=(key:keyof EventItem,value:string|boolean)=>setForm({...form,[key]:value});
+ const photo=(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>setForm({...form,image:String(r.result)});r.readAsDataURL(f)};
+ return <div className="event-form"><label>Category<input value={form.tag} onChange={e=>update('tag',e.target.value)} placeholder="EVENTS"/></label><label>Title<input value={form.title} onChange={e=>update('title',e.target.value)} placeholder="Community event title" required/></label><label>Description<textarea value={form.text} onChange={e=>update('text',e.target.value)} placeholder="What should residents know?" required/></label><div className="event-form-grid"><label>Date / time<input value={form.date} onChange={e=>update('date',e.target.value)} placeholder="18 October 2026"/></label><label>Location<input value={form.location} onChange={e=>update('location',e.target.value)} placeholder="APC Layout"/></label><label>Optional photo<input type="file" accept="image/*" onChange={photo}/></label><label>Optional link<input value={form.link||''} onChange={e=>update('link',e.target.value)} placeholder="https://..."/></label><label className="event-private-toggle"><input type="checkbox" checked={!!form.residentsOnly} onChange={e=>update('residentsOnly',e.target.checked)}/> Residents only — show after resident login</label></div>
 }
 
 function AdminOfficeBearers(){
