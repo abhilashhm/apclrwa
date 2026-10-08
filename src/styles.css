@@ -462,3 +462,30 @@
 
 .resident-overview-alert{margin:0 0 16px}.resident-overview-alert .table-link{justify-self:start;color:#a33f35}
 :root[data-theme="dark"] .resident-overview-alert .table-link{color:#ff9f91}
+
+/* Fixed-deposit management */
+.fd-panel{overflow:hidden}
+.fd-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+.fd-table-wrap .admin-data-table{min-width:1050px}
+.fd-duration-box{display:flex;flex-direction:column;justify-content:center;gap:4px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(127,127,127,.045)}
+.fd-duration-box span,.fd-duration-box small{font-size:9px;color:var(--muted)}
+.fd-duration-box strong{font-size:18px;color:var(--navy)}
+.fd-maturity-banner{display:flex;align-items:center;gap:14px;padding:14px 18px;border:1px solid rgba(216,155,25,.38);border-radius:12px;background:linear-gradient(90deg,rgba(216,155,25,.12),rgba(216,155,25,.04));margin-bottom:10px}
+.fd-maturity-banner span{font-size:8px;font-weight:900;letter-spacing:.12em;color:#a66e00}
+.fd-maturity-banner strong{font-size:13px;color:var(--navy)}
+.fd-maturity-banner small{margin-left:auto;font-size:9px;color:var(--muted)}
+.admin-fd-overview{margin-bottom:0}
+.fd-overview-inline{margin-bottom:0}
+:root[data-theme="dark"] .fd-duration-box{background:rgba(255,255,255,.035)}
+:root[data-theme="dark"] .fd-duration-box strong,
+:root[data-theme="dark"] .fd-maturity-banner strong{color:#f4f7fb}
+:root[data-theme="dark"] .fd-maturity-banner{background:rgba(243,191,67,.08);border-color:rgba(243,191,67,.32)}
+:root[data-theme="dark"] .fd-maturity-banner span{color:#f3bf43}
+
+/* Consistent report PDF/print branding */
+.print-brand{display:flex;align-items:center;gap:16px;padding-bottom:18px;margin-bottom:22px;border-bottom:2px solid #d9dee3}
+.print-brand img{width:64px;height:64px;object-fit:contain}
+.print-brand h1{margin:0 0 4px;font-size:24px;color:#173047}
+.print-brand h2{margin:0;font-size:11px;letter-spacing:.1em;color:#9a6a00}
+@media print{.print-brand{display:flex!important}}
+@media(max-width:800px){.fd-maturity-banner{align-items:flex-start;flex-direction:column;gap:5px}.fd-maturity-banner small{margin-left:0}.fd-table-wrap{margin-inline:-2px}}
