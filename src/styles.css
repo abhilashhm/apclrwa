@@ -555,3 +555,13 @@
 .event-private-toggle input{width:auto!important}
 .footer-brand .whatsapp-button{margin-top:14px}
 @media(max-width:700px){[data-theme="dark"] .hero-card-caption{background:#101c25}.update-card-image{height:130px}}
+
+/* Dark-mode fixes */
+:root[data-theme="dark"] .office-bearers{background:#111820;color:#e7edf3}
+:root[data-theme="dark"] .ob-heading h2{color:#f0f4f7}
+:root[data-theme="dark"] .ob-heading p{color:#aebbc5}
+:root[data-theme="dark"] .ob-heading .eyebrow{color:#e1bb67}
+:root[data-theme="dark"] .password-wrap button{background:#24313b;color:#eef3f7;border:1px solid rgba(231,237,243,.12)}
+:root[data-theme="dark"] .admin-empty-row{min-height:82px;display:grid;place-items:center;text-align:center;color:#aebbc5}
+:root[data-theme="dark"] .task-list>div{border-top-color:rgba(231,237,243,.08);color:#aebbc5}
+.task-empty{padding:14px 0;text-align:center;color:var(--muted);font-size:10px}
