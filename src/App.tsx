@@ -36,7 +36,7 @@ const fyStats:Record<string,string[][]>={
   '2024–25':[['₹ 4.97L','Maintenance collected'],['₹ 76,500','Outstanding maintenance'],['₹ 86,200','Festival collections'],['₹ 1.62L','Closing bank balance']]
 };
 
-const officeBearers=[
+const defaultOfficeBearers=[
 {name:'Sh. K Bhaskarachar',display:'Sri. K Bhaskarachar',role:'President',phone:''},
 {name:'Sh. Mahesh Krishnamurthy',display:'Sri. Mahesh Krishnamurthy',role:'General Secretary',phone:''},
 {name:'Sh. Krishna Rao',display:'Sri. Krishna Rao',role:'Vice President 1',phone:''},
@@ -54,6 +54,11 @@ const officeBearers=[
 {name:'Sh. Rakesh Naidu',display:'Sri. Rakesh Naidu',role:'Executive Committee Member',phone:''}
 ];
 
+const OFFICE_BEARERS_KEY='apclrwa_office_bearers';
+type OfficeBearer={name:string;display:string;role:string;phone:string;image?:string};
+function getOfficeBearers():OfficeBearer[]{try{const x=JSON.parse(localStorage.getItem(OFFICE_BEARERS_KEY)||'null');return Array.isArray(x)?x:defaultOfficeBearers}catch{return defaultOfficeBearers}}
+function saveOfficeBearers(x:OfficeBearer[]){localStorage.setItem(OFFICE_BEARERS_KEY,JSON.stringify(x));window.dispatchEvent(new Event('apclrwa-ob-change'))}
+
 function Logo({className='' }:{className?:string}){return <img className={className} src="/logo1.svg" alt="APC Layout Residents Welfare Association logo"/>}
 
 function ThemeToggle(){
@@ -69,7 +74,7 @@ function ThemeToggle(){
   return <button className="theme-toggle" onClick={toggle} aria-label={dark?'Switch to light mode':'Switch to dark mode'} title={dark?'Light mode':'Dark mode'}>{dark?'☀':'☾'}</button>;
 }
 
-function OfficeBearerPhoto({index}:{index:number}){return <div className="ob-photo-placeholder"><span>PHOTO</span><small>Image {index+1}</small></div>}
+function OfficeBearerPhoto({person,index}:{person:OfficeBearer;index:number}){return person.image?<div className="ob-photo-placeholder"><img src={person.image} alt={person.name}/></div>:<div className="ob-photo-placeholder"><span>PHOTO</span><small>Image {index+1}</small></div>}
 
 function OfficeBearerContact({phone}:{phone:string}){
   return phone
@@ -78,15 +83,16 @@ function OfficeBearerContact({phone}:{phone:string}){
 }
 
 function OfficeBearers(){
-  const[open,setOpen]=useState(false);
+  const[open,setOpen]=useState(false);const[people,setPeople]=useState<OfficeBearer[]>(getOfficeBearers());
+  useEffect(()=>{const f=()=>setPeople(getOfficeBearers());window.addEventListener('apclrwa-ob-change',f);return()=>window.removeEventListener('apclrwa-ob-change',f)},[]);
   return <section className="office-bearers"><div className="container">
     <div className="section-heading ob-heading"><div className="eyebrow">OUR ASSOCIATION</div><h2>APCLRWA <em>Office Bearers</em></h2><p>Meet the association office bearers serving APC Layout. The complete list is available below.</p></div>
-    <div className="ob-feature-grid">{officeBearers.slice(0,2).map((person,i)=><article className="ob-card featured" key={person.name}><OfficeBearerPhoto index={i}/><div className="ob-info"><h3>{person.display}</h3><p>{person.role}</p><OfficeBearerContact phone={person.phone}/></div></article>)}</div>
+    <div className="ob-feature-grid">{people.slice(0,2).map((person,i)=><article className="ob-card featured" key={person.name}><OfficeBearerPhoto person={person} index={i}/><div className="ob-info"><h3>{person.display}</h3><p>{person.role}</p><OfficeBearerContact phone={person.phone}/></div></article>)}</div>
     <button className="button primary ob-see-all" onClick={()=>setOpen(true)}>View complete OB list <span>→</span></button>
   </div>
   {open&&<div className="ob-modal-backdrop" role="dialog" aria-modal="true" onMouseDown={e=>{if(e.target===e.currentTarget)setOpen(false)}}><div className="ob-modal">
     <div className="ob-modal-head"><div><div className="eyebrow">APCLRWA 2025–2027</div><h2>Office Bearers</h2></div><button className="ob-close" onClick={()=>setOpen(false)}>×</button></div>
-    <div className="ob-modal-grid">{officeBearers.map((person,i)=><article className="ob-card" key={person.name}><OfficeBearerPhoto index={i}/><div className="ob-info"><h3>{person.display}</h3><p>{person.role}</p><OfficeBearerContact phone={person.phone}/></div></article>)}</div>
+    <div className="ob-modal-grid">{people.map((person,i)=><article className="ob-card" key={person.name}><OfficeBearerPhoto person={person} index={i}/><div className="ob-info"><h3>{person.display}</h3><p>{person.role}</p><OfficeBearerContact phone={person.phone}/></div></article>)}</div>
   </div></div>}
 </section>;
 }
@@ -254,6 +260,12 @@ function ResidentUpdates(){
  return <ResidentSection kicker="FROM THE ASSOCIATION" title="Community updates" action={<WhatsAppButton/>}>
    <div className="resident-update-grid">{residentUpdates.map(item=><article key={item.title}><div><span>{item.tag}</span><small>{item.date}</small></div><h4>{item.title}</h4><p>{item.text}</p></article>)}</div>
  </ResidentSection>
+}
+
+function ResidentOfficeBearers(){
+ const[people,setPeople]=useState<OfficeBearer[]>(getOfficeBearers());
+ useEffect(()=>{const f=()=>setPeople(getOfficeBearers());window.addEventListener('apclrwa-ob-change',f);return()=>window.removeEventListener('apclrwa-ob-change',f)},[]);
+ return <ResidentSection kicker="OUR ASSOCIATION" title="Office Bearers" action={<span className="resident-count">{people.length} members</span>}><div className="resident-ob-grid">{people.map((p,i)=><article className="resident-ob-card" key={p.name}><div className="resident-ob-photo">{p.image?<img src={p.image} alt={p.name}/>:<span>PHOTO</span>}</div><div><h4>{p.display}</h4><p>{p.role}</p>{p.phone&&<a href={'tel:'+p.phone}>☎ {p.phone}</a>}</div></article>)}</div></ResidentSection>
 }
 
 function ResidentDashboard({onLogout}:{onLogout:()=>void}){
@@ -431,10 +443,24 @@ function EventForm({form,setForm}:{form:EventItem;setForm:(v:EventItem)=>void}){
  return <div className="event-form"><label>Category<input value={form.tag} onChange={e=>update('tag',e.target.value)} placeholder="EVENTS"/></label><label>Title<input value={form.title} onChange={e=>update('title',e.target.value)} placeholder="Community event title" required/></label><label>Description<textarea value={form.text} onChange={e=>update('text',e.target.value)} placeholder="What should residents know?" required/></label><div className="event-form-grid"><label>Date / time<input value={form.date} onChange={e=>update('date',e.target.value)} placeholder="18 October 2026"/></label><label>Location<input value={form.location} onChange={e=>update('location',e.target.value)} placeholder="APC Layout"/></label></div></div>
 }
 
+function AdminOfficeBearers(){
+ const[people,setPeople]=useState<OfficeBearer[]>(getOfficeBearers());const[editing,setEditing]=useState<OfficeBearer|null>(null);const[open,setOpen]=useState(false);
+ useEffect(()=>{const f=()=>setPeople(getOfficeBearers());window.addEventListener('apclrwa-ob-change',f);return()=>window.removeEventListener('apclrwa-ob-change',f)},[]);
+ const save=(p:OfficeBearer)=>{saveOfficeBearers(editing?people.map(x=>x.name===editing.name?p:x):[...people,p]);setOpen(false);setEditing(null)};
+ const remove=(p:OfficeBearer)=>{if(window.confirm('Delete '+p.display+' from the office bearer list?'))saveOfficeBearers(people.filter(x=>x.name!==p.name))};
+ return <section className="admin-module-stack"><section className="admin-panel"><div className="panel-head"><div><span>ASSOCIATION GOVERNANCE</span><h3>Office Bearers</h3></div><button className="admin-primary" onClick={()=>{setEditing(null);setOpen(true)}}>+ Add office bearer</button></div><p className="module-note">Manage the official list shown on the website and in the resident portal. Photos are cropped to a consistent portrait frame before saving.</p><div className="ob-admin-grid">{people.map((p,i)=><article className="ob-admin-card" key={p.name}><div className="ob-admin-photo">{p.image?<img src={p.image} alt={p.name}/>:<span>PHOTO</span>}</div><div><strong>{p.display}</strong><small>{p.role}</small><small>{p.phone||'No phone number'}</small></div><div className="ob-admin-actions"><button className="table-link" onClick={()=>{setEditing(p);setOpen(true)}}>Edit</button><button className="danger-link" onClick={()=>remove(p)}>Delete</button></div></article>)}</div></section>{open&&<OfficeBearerForm editing={editing} onClose={()=>{setOpen(false);setEditing(null)}} onSave={save}/>}</section>
+}
+
+function OfficeBearerForm({editing,onClose,onSave}:{editing:OfficeBearer|null;onClose:()=>void;onSave:(p:OfficeBearer)=>void}){
+ const[form,setForm]=useState<OfficeBearer>(editing||{name:'',display:'',role:'',phone:'',image:''});const[raw,setRaw]=useState(editing?.image||'');const[zoom,setZoom]=useState(1);const[x,setX]=useState(50);const[y,setY]=useState(50);const[error,setError]=useState('');
+ const file=(e:React.ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;if(f.size>4*1024*1024){setError('Please choose an image smaller than 4 MB.');return}const reader=new FileReader();reader.onload=()=>{setRaw(String(reader.result));setError('')};reader.readAsDataURL(f)};
+ const crop=()=>{if(!raw){onSave(form);return}const img=new Image();img.onload=()=>{const size=Math.min(img.width,img.height);const scale=Math.max(1,zoom);const cropSize=size/scale;const sx=Math.max(0,Math.min(img.width-cropSize,(x/100)*(img.width-cropSize)));const sy=Math.max(0,Math.min(img.height-cropSize,(y/100)*(img.height-cropSize)));const canvas=document.createElement('canvas');canvas.width=600;canvas.height=600;const ctx=canvas.getContext('2d');if(!ctx){setError('Could not prepare the image crop.');return}ctx.drawImage(img,sx,sy,cropSize,cropSize,0,0,600,600);onSave({...form,image:canvas.toDataURL('image/jpeg',.86)})};img.src=raw};
+ return <div className="resident-modal-backdrop"><form className="resident-modal ob-editor-modal" onSubmit={e=>{e.preventDefault();if(!form.name||!form.display||!form.role||!form.phone){setError('Name, display name, designation and phone number are required.');return}crop()}}><div className="event-modal-head"><div><div className="eyebrow">{editing?'UPDATE':'NEW'} OFFICE BEARER</div><h2>{editing?'Edit office bearer':'Add office bearer'}</h2></div><button type="button" className="modal-close" onClick={onClose}>×</button></div><div className="resident-form-grid"><label>Full name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/></label><label>Display name<input value={form.display} onChange={e=>setForm({...form,display:e.target.value})} required/></label><label>Designation<input value={form.role} onChange={e=>setForm({...form,role:e.target.value})} required/></label><label>Phone number<input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} required/></label></div><label className="ob-photo-upload">Photo<input type="file" accept="image/*" onChange={file}/></label>{raw&&<div className="ob-crop-area"><div className="ob-crop-preview"><img src={raw} style={{transform:'scale('+zoom+')',left:x+'%',top:y+'%'}} alt="Crop preview"/></div><label>Zoom<input type="range" min="1" max="3" step=".05" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label><label>Horizontal<input type="range" min="0" max="100" value={x} onChange={e=>setX(Number(e.target.value))}/></label><label>Vertical<input type="range" min="0" max="100" value={y} onChange={e=>setY(Number(e.target.value))}/></label><small>Adjust the frame, then save. The image will be cropped to a square portrait.</small></div>}{error&&<div className="login-error">{error}</div>}<div className="event-modal-actions"><button type="button" onClick={onClose}>Cancel</button><button className="admin-primary" type="submit">Save office bearer</button></div></form></div>
+}
 function AdminDashboard({onLogout}:{onLogout:()=>void}){
  const[section,setSection]=useState('Overview');
  const[selectedFY,setSelectedFY]=useState(()=>localStorage.getItem('apclrwa_selected_fy')||'2026–27');
- const nav=['Overview','Residents','Maintenance','Donations','Expenses','Bank & Cash','Reports','Events','Audit Trail'];
+ const nav=['Overview','Residents','Maintenance','Donations','Expenses','Bank & Cash','Reports','Events','Office Bearers','Audit Trail'];
  const stats=fyStats[selectedFY]||fyStats['2026–27'];
  const[liveTick,setLiveTick]=useState(0);
  useEffect(()=>{const f=()=>setLiveTick(v=>v+1);window.addEventListener('apclrwa-ledger-change',f);window.addEventListener('apclrwa-fd-change',f);window.addEventListener('apclrwa-payments-change',f);return()=>{window.removeEventListener('apclrwa-ledger-change',f);window.removeEventListener('apclrwa-fd-change',f);window.removeEventListener('apclrwa-payments-change',f)}},[]);
@@ -443,7 +469,7 @@ function AdminDashboard({onLogout}:{onLogout:()=>void}){
  const renderModule=()=>{
    if(section==='Residents')return <AdminResidents/>;
    if(['Maintenance','Donations','Expenses','Bank & Cash','Reports','Audit Trail'].includes(section))return <AdminFinancialTable fy={selectedFY} kind={section==='Donations'?'Collections':section as 'Maintenance'|'Expenses'|'Bank & Cash'|'Reports'|'Audit Trail'}/>;
-   if(section==='Events')return <EventManager/>;
+   if(section==='Events')return <EventManager/>;if(section==='Office Bearers')return <AdminOfficeBearers/>;
    return null;
  };
  return <div className="admin-shell">
