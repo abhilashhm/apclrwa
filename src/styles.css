@@ -489,3 +489,40 @@
 .print-brand h2{margin:0;font-size:11px;letter-spacing:.1em;color:#9a6a00}
 @media print{.print-brand{display:flex!important}}
 @media(max-width:800px){.fd-maturity-banner{align-items:flex-start;flex-direction:column;gap:5px}.fd-maturity-banner small{margin-left:0}.fd-table-wrap{margin-inline:-2px}}
+
+/* Unified application controls and light/dark modal surfaces */
+.admin-panel,.admin-stat,.admin-placeholder,.ob-card,.ob-modal{background:var(--paper);color:var(--navy)}
+.admin-primary,.login-submit,.event-modal-actions>button,.quick-actions button,.resident-actions>button:not(.theme-toggle){min-height:40px;border-radius:10px;border:1px solid rgba(16,43,69,.16);background:var(--navy);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 15px;font-size:10px;font-weight:800;line-height:1.1;text-align:center}
+.admin-primary{box-shadow:0 8px 18px rgba(16,43,69,.15)}
+.admin-primary:hover,.login-submit:hover,.quick-actions button:hover,.event-modal-actions>button:hover,.resident-actions>button:not(.theme-toggle):hover{transform:translateY(-1px)}
+.login-submit{width:100%;margin-top:2px;font-size:12px}
+.event-modal-actions>button:first-child{background:var(--paper);color:var(--navy)}
+.resident-actions{display:flex;align-items:center;gap:10px}
+.resident-actions>button:not(.theme-toggle){min-width:76px}
+.resident-whatsapp-icon{width:38px;height:38px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;background:var(--paper);color:#188f4e;font-size:18px;line-height:1;box-shadow:0 5px 14px rgba(16,43,69,.08)}
+.resident-ob-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.resident-ob-card{display:grid;grid-template-columns:82px 1fr;gap:13px;align-items:center;border:1px solid var(--line);border-radius:13px;padding:12px;background:var(--paper)}
+.resident-ob-photo{width:82px;height:98px;border-radius:10px;overflow:hidden;background:#edf0f2;display:grid;place-items:center;color:var(--muted);font-size:8px;font-weight:800}
+.resident-ob-photo img,.ob-photo-placeholder img,.ob-admin-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.resident-ob-card h4{margin:0 0 5px;font-size:11px;color:var(--navy)}
+.resident-ob-card p{margin:0 0 7px;font-size:9px;color:var(--muted)}
+.resident-ob-card a{font-size:9px;color:var(--gold);font-weight:800}
+.ob-admin-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.ob-admin-card{display:grid;grid-template-columns:74px 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px;background:rgba(127,127,127,.035)}
+.ob-admin-photo{width:74px;height:90px;border-radius:9px;overflow:hidden;background:#edf0f2;display:grid;place-items:center;color:var(--muted);font-size:8px;font-weight:800}
+.ob-admin-card strong{display:block;font-size:11px;color:var(--navy)}
+.ob-admin-card small{display:block;margin-top:4px;font-size:8px;color:var(--muted)}
+.ob-admin-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.ob-photo-upload{display:grid;gap:7px;margin-top:16px;font-size:9px;font-weight:800;color:var(--navy)}
+.ob-photo-upload input{font-size:9px}
+.ob-crop-area{display:grid;gap:10px;margin-top:15px;padding:13px;border:1px solid var(--line);border-radius:12px;background:rgba(127,127,127,.035)}
+.ob-crop-preview{width:220px;height:220px;margin:auto;position:relative;overflow:hidden;border-radius:12px;background:#dfe4e7}
+.ob-crop-preview img{position:absolute;width:100%;height:100%;object-fit:cover;transform-origin:center;translate:-50% -50%}
+.ob-crop-area label{display:grid;gap:5px;font-size:8px;color:var(--muted);font-weight:800}
+.ob-crop-area small{font-size:8px;color:var(--muted)}
+[data-theme="dark"] .admin-panel,[data-theme="dark"] .admin-stat,[data-theme="dark"] .admin-placeholder,[data-theme="dark"] .ob-card,[data-theme="dark"] .ob-modal{background:#17232d;color:#f4f7fb}
+[data-theme="dark"] .resident-ob-card,[data-theme="dark"] .ob-admin-card{background:#17232d}
+[data-theme="dark"] .resident-ob-card h4,[data-theme="dark"] .ob-admin-card strong,[data-theme="dark"] .ob-photo-upload{color:#f4f7fb}
+[data-theme="dark"] .event-modal-actions>button:first-child{background:#17232d;color:#f4f7fb}
+[data-theme="dark"] .admin-primary,[data-theme="dark"] .login-submit,[data-theme="dark"] .event-modal-actions>button:not(:first-child),[data-theme="dark"] .quick-actions button,[data-theme="dark"] .resident-actions>button:not(.theme-toggle){background:#f3bf43;color:#0a1724;border-color:#f8d36d}
+@media(max-width:850px){.resident-ob-grid{grid-template-columns:1fr}.ob-admin-grid{grid-template-columns:1fr}}
