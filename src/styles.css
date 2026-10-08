@@ -565,3 +565,7 @@
 :root[data-theme="dark"] .admin-empty-row{min-height:82px;display:grid;place-items:center;text-align:center;color:#aebbc5}
 :root[data-theme="dark"] .task-list>div{border-top-color:rgba(231,237,243,.08);color:#aebbc5}
 .task-empty{padding:14px 0;text-align:center;color:var(--muted);font-size:10px}
+
+
+/* Center the empty recent-transactions state across the full transaction panel */
+.transaction-list>.admin-empty-row{grid-template-columns:1fr!important;width:100%;min-width:0;justify-self:stretch;text-align:center!important;justify-content:center;align-items:center}
