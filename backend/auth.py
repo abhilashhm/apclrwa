@@ -1,13 +1,15 @@
-"""Small FastAPI authentication service for the committee portal.
+"""FastAPI authentication service and private local Tally snapshot bridge.
 
-This service intentionally owns only identities and sessions. Financial data
-remains in the browser until the accounting API migration is implemented.
+Authentication is database-backed. Operational financial records are still
+stored in browser localStorage; the Tally endpoint serves a read-only import
+snapshot and does not make that snapshot the authoritative accounting ledger.
 """
 
 from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import os
 import secrets
 import sqlite3
@@ -229,3 +231,15 @@ def logout(request: Request, response: Response) -> dict[str, str]:
 @app.get("/api/admin/session")
 def committee_session(user: dict[str, str] = Depends(require_committee)) -> dict[str, Any]:
     return {"user": user, "authorized": True}
+
+
+@app.get("/api/admin/tally-import")
+def tally_import(user: dict[str, str] = Depends(require_committee)) -> dict[str, Any]:
+    """Return the private, locally reconciled Tally snapshot to committee users."""
+    import_path = DATA_DIR / "tally-import.json"
+    try:
+        return json.loads(import_path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="No local Tally import is available.") from exc
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=500, detail="The local Tally import could not be read.") from exc
