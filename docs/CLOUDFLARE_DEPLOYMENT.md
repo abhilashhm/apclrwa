@@ -145,10 +145,10 @@ following commands remain useful for a future redeploy:
    batches require it; the current normalized `data/tally-import.json` snapshot
    is uploaded directly by a committee member and is not committed or deployed.
 
-The deployed site and authenticated committee portal were checked. The
-existing `abhilashhm` account was preserved. A separate short-lived
-`migration-import-20261021` committee account is currently available only to
-finish the Tally upload; remove it after the import is verified.
+The deployed site and authenticated committee portal were checked. The Tally
+snapshot was uploaded and verified in remote D1. The existing `abhilashhm`
+account was preserved; the temporary migration account used for this upload
+was signed out and removed afterward.
 
 The Worker/D1 deployment is complete. The Worker accepts the normalized Tally
 snapshot through the authenticated JSON upload route; only the old local-file
