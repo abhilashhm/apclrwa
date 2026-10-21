@@ -13,9 +13,9 @@ remains disabled.
 - Deployment version ID: `e7380724-3f39-4b82-8f12-029d5c742760`
 - Applied migrations: `0001_initial.sql`, `0002_password_scheme.sql`
 
-The public/static surface is live and independently checked. No committee
-account has been seeded into the new remote D1 database yet, so protected login
-will remain unavailable until the one-time bootstrap below is completed.
+The public/static surface is live and independently checked. Remote D1 has an
+active committee account (`abhilashhm`). Its password is not available from the
+repository, and the existing account was left unchanged.
 
 The implementation keeps local development unchanged:
 
@@ -79,8 +79,15 @@ images are kept small. That is an estimate, not an account-usage result.
 
 ## One-time remote committee bootstrap
 
-Run this locally in a terminal where you can enter the chosen password directly
-(do not paste the password into chat or commit the generated file):
+First inspect the remote users table so you do not create a duplicate account:
+
+```powershell
+npx wrangler d1 execute apclrwa-portal --remote --command "SELECT username, role, active FROM users;"
+```
+
+Only run the bootstrap when you have confirmed that no authorized committee
+account exists. Enter the chosen password directly in a terminal (do not paste
+it into chat or commit the generated file):
 
 ```powershell
 python cloudflare/bootstrap_admin.py > cloudflare-admin.sql
@@ -138,10 +145,10 @@ following commands remain useful for a future redeploy:
    batches require it; the current normalized `data/tally-import.json` snapshot
    is uploaded directly by a committee member and is not committed or deployed.
 
-The remote protected API was tested with a temporary committee row and then
-that row, its sessions, and its authentication-attempt records were removed.
-The remote D1 database is currently ready for the real committee bootstrap;
-no usable committee password has been stored by the coding assistant.
+The deployed site and authenticated committee portal were checked. The
+existing `abhilashhm` account was preserved. A separate short-lived
+`migration-import-20261021` committee account is currently available only to
+finish the Tally upload; remove it after the import is verified.
 
 The Worker/D1 deployment is complete. The Worker accepts the normalized Tally
 snapshot through the authenticated JSON upload route; only the old local-file
