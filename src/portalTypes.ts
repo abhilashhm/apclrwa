@@ -1,0 +1,30 @@
+export type AuthUser = {id:string;username:string;displayName:string;role:'committee'|'resident';residentId?:string;tempPassword?:boolean};
+export type EventItem = {id:string;tag:string;title:string;text:string;date:string;location:string;image?:string;link?:string;residentsOnly?:boolean;createdAt?:string};
+export type OfficeBearer = {id?:string;name:string;display:string;role:string;phone:string;image?:string};
+export type PaymentDetails = {date:string;mode:string;details:string};
+export type ResidentRecord = {id:string;house:string;cross:string;name:string;mobile:string;residentType:'Owner'|'Tenant'|'Unspecified';initialCharge:number;initialChargePaid:boolean;membershipPayment?:PaymentDetails;active:boolean;createdAt:string;tempPassword?:boolean;hasAccount?:boolean};
+// Password is a write-only request field. It is never part of a resident response/cache.
+export type ResidentWrite = ResidentRecord & {password?:string};
+export type LedgerEntry = {id:string;kind:string;amount:number;house?:string;residentId?:string;paymentId?:string;description:string;mode:string;date:string;financialYear:string;amcForFinancialYear?:string;status:string;expenseType?:string;direction?:string;donorName?:string;donationType?:string;bucket?:string;transferOf?:string;createdAt?:string};
+export type OpeningBalances = {bank:number;cash:number;financialYear:string;date:string};
+export type AMCRate = {financialYear:string;owner:number;tenant:number};
+export type FixedDeposit = {id:string;startDate:string;maturityDate:string;amount:number;maturityAmount:number;mode:string;reference:string;createdAt:string;status:'Active'|'Matured'|'Closed'};
+export type ResidentPayment = {id:string;residentId?:string;resident:string;mobile:string;house:string;type:string;amount:string;numericAmount:number;date:string;transactionDate?:string;createdAt?:string;status:string;financialYear:string;amcForFinancialYear?:string;amcBucket?:string;mode:string;details:string;reviewedAt?:string;reviewedBy?:string;donorName?:string;donationType?:string};
+export type PortalCollections = {
+  residents:ResidentRecord[];
+  ledger:LedgerEntry[];
+  payments:ResidentPayment[];
+  amcRates:AMCRate[];
+  openingBalances:OpeningBalances|null;
+  expenseTypes:string[];
+  fixedDeposits:FixedDeposit[];
+  events:EventItem[];
+  officeBearers:OfficeBearer[];
+  tallyReconciliation:any;
+};
+export type CollectionName = keyof PortalCollections;
+export type CollectionWrite<K extends CollectionName> = K extends 'residents' ? ResidentWrite[] : PortalCollections[K];
+export type PortalSnapshot = {revision:number;collections:PortalCollections;currentResident:ResidentRecord|null};
+export type PublicContent = {events:EventItem[];officeBearers:OfficeBearer[]};
+export type MigrationCollections = Partial<Omit<PortalCollections,'tallyReconciliation'>>;
+export type MigrationPreview = {counts:Record<string,number>;warnings:string[];revision:number};

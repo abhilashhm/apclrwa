@@ -5,20 +5,23 @@ Updated 2026-10-09 after importing the provided Tally exports locally.
 ## What is operational in this workspace
 
 - The React/Vite frontend builds with TypeScript checks (`npm run build`).
-- Committee authentication and sessions run through the local FastAPI service and SQLite.
+- Committee and resident authentication and sessions run through the local FastAPI service and SQLite. Production cookie, HTTPS, explicit-origin, and SQLite login-throttling checks are enforced by configuration.
+- Operational portal collections are stored in SQLite behind role-checked, revision-checked API endpoints. Resident data is server-filtered; passwords are hashed server-side and are never returned to the frontend.
+- Resident payment claims use server-side idempotency keys. Committee approval creates the associated posted receipt atomically rather than writing browser-local records.
+- Browser/localStorage data is available only through an explicit committee migration preview/import flow. The server validates the import, strips legacy credentials, rejects conflicts, and creates a private pre-import database backup.
 - `backend/tally_import.py` reads the supplied Excel exports and produces `data/tally-import.json`; the private `data/` directory is excluded from Git.
-- A committee session can fetch that snapshot from `/api/admin/tally-import`. The browser merges imported rows by stable IDs and presents Tally cash/bank reconciliation and source-ledger control checks in Reports.
+- Locally, a committee user can explicitly apply the configured snapshot through `/api/admin/tally-import/apply`. In Cloudflare, the same normalized JSON is uploaded through `/api/admin/tally-import/upload`; the Worker merges imported rows by stable IDs and presents Tally cash/bank reconciliation and source-ledger control checks in Reports.
 - The import is repeatable and does not edit source workbooks. Bank and cash book source totals reconcile to their reported closing balances.
 
 ## Not production-ready yet
 
-- Financial records are still held in each browser's localStorage. The imported snapshot is not an authoritative shared database and changes made in the UI do not update Tally or a server-side accounting ledger.
-- The Tally import is currently a local development bridge. The source workbooks and generated import JSON are private local files; neither should be deployed or committed.
+- The SQLite portal store is authoritative for the portal, but it is still a JSON-collection store rather than a normalized immutable double-entry journal. It does not update Tally.
+- The source workbooks and generated import JSON remain private local files and are not committed or deployed. The normalized JSON snapshot can be uploaded explicitly by a committee member to the Cloudflare Worker, which validates and appends it into D1 without requiring access to the local filesystem.
 - Opening cash differs by ₹45 from the prior balance sheet dated 2026-03-29. The March 31 cash count/closing balance has not been supplied.
 - AGM ledger voucher details omit ₹800 present in the cash book/closing balance. Do not infer its payee or purpose from the incomplete row.
 - The current FY AMC detail exports only run through July and total ₹18,000, while the complete bank/cash books through 2026-10-04 show ₹41,000. This is an incomplete supporting-export gap, not a bank/cash roll-forward difference.
 - Existing browser data may already contain manually entered items. The importer only deduplicates exact stable IDs and does not certify semantic duplicates against prior manual rows.
-- Resident accounts, backend financial APIs, immutable double-entry journals, verified bank statement matching, audit logs, period closing, backups, deployment secrets, and production hosting remain outstanding.
+- Immutable double-entry journals, verified bank statement matching, append-only business audit logs, period closing, operational backup/restore procedures, deployment secrets, and production hosting remain outstanding. Database backups are currently created before explicit browser/Tally imports.
 
 ## Tally controls from supplied books
 

@@ -1,0 +1,28 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "apclrwa-community-portal",
+  "main": "cloudflare/worker.py",
+	"compatibility_date": "2026-10-20",
+	"compatibility_flags": [
+		"python_workers"
+	],
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS",
+		"run_worker_first": true,
+		"not_found_handling": "single-page-application"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "apclrwa-portal",
+			"database_id": "4abbc8f9-2951-40a7-bdd5-25a2d21c7963",
+			"migrations_dir": "migrations"
+		}
+	],
+	"vars": {
+		"APCLRWA_ENV": "production",
+		"APCLRWA_COOKIE_SECURE": "true",
+		"APCLRWA_CORS_ORIGINS": ""
+	}
+}

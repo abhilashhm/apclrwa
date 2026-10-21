@@ -17,10 +17,10 @@ def create_admin() -> int:
         print("Use a username without spaces (up to 120 characters).", file=sys.stderr)
         return 2
 
-    password = getpass.getpass("New password (at least 12 characters): ")
+    password = getpass.getpass("New password (12-1024 characters): ")
     confirmation = getpass.getpass("Confirm password: ")
-    if len(password) < 12:
-        print("Password must be at least 12 characters.", file=sys.stderr)
+    if not 12 <= len(password) <= 1024:
+        print("Password must be between 12 and 1024 characters.", file=sys.stderr)
         return 2
     if password != confirmation:
         print("Passwords do not match.", file=sys.stderr)

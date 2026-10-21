@@ -1,6 +1,11 @@
 node_modules/
 dist/
 .venv/
+.venv-workers/
+.wrangler/
+python_modules/
+.uv-cache/
+cloudflare-admin.sql
 .xls-reader/
 __pycache__/
 *.py[cod]

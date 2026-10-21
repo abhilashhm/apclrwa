@@ -1,0 +1,15 @@
+[project]
+name = "apclrwa-community-portal-worker"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.143,<0.144",
+    "pydantic>=2.14,<2.15",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "workers-py",
+    "workers-runtime-sdk",
+]

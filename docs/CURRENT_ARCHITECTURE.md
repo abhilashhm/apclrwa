@@ -2,17 +2,17 @@
 
 ## Scope and source of truth
 
-This document describes the repository as inspected on branch `initial`. The app is a client-side community portal prototype, not a deployed accounting system. The implementation is concentrated in `src/App.tsx` and `src/styles.css`; the entry point is `src/main.tsx`, and `index.html` supplies the document metadata and `/logo1.svg` favicon. `package.json` defines a Vite development server and a production build (`tsc -b && vite build`). Dependencies are React 19, TypeScript, Vite, and `qrcode`.
+This document describes the repository as inspected on branch `initial`. The app is a community portal with a React/Vite frontend and a local FastAPI/SQLite backend; it is not yet a deployed production accounting system. The implementation is concentrated in `src/App.tsx` and `src/styles.css`, with API/state modules in `src/api.ts`, `src/portalStore.ts`, `src/portalTypes.ts`, and `src/legacyMigration.ts`. The entry point is `src/main.tsx`, and `index.html` supplies the document metadata and `/logo1.svg` favicon. `package.json` defines a Vite development server and a production build (`tsc -b && vite build`). Dependencies are React 19, TypeScript, Vite, and `qrcode`.
 
-The repository now includes a small FastAPI service in `backend/auth.py`, with SQLite users/sessions, server-side committee authentication, and a protected endpoint for the private Tally import snapshot. It does not yet store day-to-day financial records or provide a financial API. Operational portal data remains in browser `localStorage`. The UI has a public home page, backend login, resident portal placeholder, password-change view, and committee portal selected by in-app state in `App`.
+The FastAPI service in `backend/auth.py` now provides SQLite users/sessions, committee and resident authentication, secure session-cookie policy, password-change handling, origin/transport checks, and durable SQLite-backed login throttling. `backend/portal.py` and `backend/portal_models.py` provide the authoritative operational portal API and bounded data contracts. `auth.py` includes the portal router and initializes its schema on startup. The UI has a public home page, backend login, resident portal, password-change view, committee portal, and explicit legacy-data migration flow.
 
-`backend/tally_import.py` reads the Tally `.xls` exports from `C:\Tally.ERP9` without changing them, normalizes the bank/cash books, and writes a private `data/tally-import.json` snapshot. `data/` is gitignored. On committee sign-in, the UI fetches the snapshot through `/api/admin/tally-import`, adds missing rows to browser storage by stable IDs, sets the imported opening balance only when none exists, and creates the April 1 Advance AMC reclassification rows. This is a local import bridge, not authoritative backend accounting storage.
+`backend/tally_import.py` reads the Tally `.xls` exports from `C:\Tally.ERP9` without changing them, normalizes the bank/cash books, and writes a private `data/tally-import.json` snapshot. `data/` is gitignored. Locally, a committee user explicitly applies that snapshot through `/api/admin/tally-import/apply`. In Cloudflare, a committee user uploads the normalized snapshot through `/api/admin/tally-import/upload`; the Worker validates it, deduplicates stable IDs, preserves existing records, and stores the reconciliation in D1. The importer remains a local bridge; the server-side portal ledger is authoritative for portal operations but is not yet a full double-entry accounting system.
 
 ## UI and state organization
 
-`src/App.tsx` contains the landing page, theme toggle, office-bearer display, events, login, resident workflows, data types/storage helpers, admin forms, report generation, and the committee dashboard. `src/styles.css` contains the app-wide visual system, responsive rules, admin/resident styles, and theme-specific overrides. The shared theme preference is `apclrwa_theme`; a custom event propagates theme changes within the page. Office-bearer updates use a similar custom event. Events and user-entered records are read from `localStorage`.
+`src/App.tsx` contains the landing page, theme toggle, office-bearer display, events, login, resident workflows, admin forms, report generation, and the committee dashboard. `src/portalStore.ts` keeps the authenticated portal snapshot in memory, serializes mutations, handles stale revisions, and refreshes after conflicts. `src/styles.css` contains the app-wide visual system, responsive rules, admin/resident styles, and theme-specific overrides. The shared theme preference and selected financial year remain in `localStorage`; operational collections are read and written through the API.
 
-The public page filters out residents-only events. Committee login uses an HTTP-only backend session cookie; resident sign-in remains unavailable until resident accounts are migrated. Old browser session flags are cleared at startup. Resident UPI payment claims are still browser-persisted pending items until committee review; approval appends a posted entry to the browser ledger and does not verify bank settlement.
+The public page loads `/api/public/content`, whose server response excludes residents-only events. Resident portal snapshots are role-filtered on the server: residents receive their own profile, payment claims, posted receipt-like rows, rates, public/private authenticated updates, and office-bearers; committee users receive the full operational snapshot. Committee login and resident login use an HTTP-only backend session cookie. Resident temporary passwords must be changed through `/api/auth/password` before portal access. Resident UPI payment claims are server-persisted with idempotency keys; committee review and posted receipt creation are atomic in one database transaction. Bank/UPI settlement is still a manual verification process.
 
 ## Persisted browser data
 
@@ -20,21 +20,21 @@ The app uses these keys (all scoped to one browser profile, without multi-user s
 
 | Key | Contents / use |
 | --- | --- |
-| `apclrwa_residents` | Resident records, membership state, active status, prototype plaintext passwords (not safe for production) |
-| `apclrwa_pending_payments` | Resident-submitted payment claims and review status |
-| `apclrwa_admin_ledger` | Maintenance, contribution, expense, and bank/cash rows, with a string `kind` and posted/status fields |
-| `apclrwa_fixed_deposits` | FD records and lifecycle status |
-| `apclrwa_opening_balances` | Editable opening bank/cash figures and financial year |
-| `apclrwa_expense_types` | User-configurable expense categories |
-| `apclrwa_events` | Community updates, including optional image data and resident-only visibility |
-| `apclrwa_office_bearers` | Association office-bearer details and optional image data |
+| `apclrwa_residents` | Legacy resident records detected only by the explicit committee migration flow; no longer an authoritative source |
+| `apclrwa_pending_payments` | Legacy payment claims detected only by explicit migration; server claims are stored in SQLite |
+| `apclrwa_admin_ledger` | Legacy ledger rows detected only by explicit migration; server ledger rows are stored in SQLite |
+| `apclrwa_fixed_deposits` | Legacy FD records detected only by explicit migration |
+| `apclrwa_opening_balances` | Legacy opening balances detected only by explicit migration |
+| `apclrwa_expense_types` | Legacy expense categories detected only by explicit migration |
+| `apclrwa_events` | Legacy community updates detected only by explicit migration |
+| `apclrwa_office_bearers` | Legacy office-bearer details detected only by explicit migration |
 | `apclrwa_theme` | Shared light/dark preference |
 | `apclrwa_selected_fy` | Committee portal's selected FY |
-| `apclrwa_tally_import_id` | Local marker for the imported Tally snapshot version |
-| `apclrwa_tally_reconciliation` | Tally bank/cash roll-forward and source-ledger control results |
-| `apclrwa_admin_session`, `apclrwa_resident_session`, `apclrwa_resident_username` | Demo login/session routing state |
+| `apclrwa_tally_import_id` | Legacy local Tally marker; excluded from browser migration |
+| `apclrwa_tally_reconciliation` | Legacy local reconciliation; excluded from browser migration |
+| `apclrwa_admin_session`, `apclrwa_resident_session`, `apclrwa_resident_username` | Old demo routing flags; no longer used for authentication |
 
-Missing resident/event/opening-balance data now produces empty or unset states; the exact built-in sample resident is filtered from the resident store. Legacy residents with no `cross` value are normalized when loaded. Images may be stored as data URLs. Browser storage is not a reliable backup or a shared source of truth.
+Legacy values are preserved until a committee member explicitly previews, validates, imports, and separately confirms cleanup. The server strips password and token fields, creates a private pre-import SQLite backup, rejects conflicting identities, and never treats legacy approval flags as verified accounting. Images are currently bounded and may remain as data URLs in the server collection; a managed media store is still a later improvement. Browser storage is not a reliable backup or a shared source of truth.
 
 ## Financial behavior currently present
 
@@ -49,12 +49,12 @@ Missing resident/event/opening-balance data now produces empty or unset states; 
 ## Present limitations and risks
 
 1. **Build baseline:** Before the Phase 1 fix, TypeScript rejected report-row unions because some synthesized rows did not expose optional `expenseType`/`donationType` properties. The report collection has now been explicitly typed as `LedgerEntry[]`; the local production build is the verification gate for this fix.
-2. **Persistence and concurrency:** localStorage is per browser and can be edited or cleared by a user. It does not provide server-side validation, transactional updates, multi-user consistency, durable identifiers, or managed backups.
+2. **Persistence and concurrency:** operational collections are now validated and revision-checked in SQLite with a pre-import backup path. The collection model is still JSON-in-SQLite rather than normalized accounting tables, and posted accounting rows are not yet immutable double-entry journals.
 3. **Accounting integrity:** balances are derived from mutable records rather than balanced, immutable journal entries. UI statuses and approvals are not a substitute for settlement verification, audit logs, period locks, or reversal workflows.
-4. **Authentication:** committee authentication is server-side, but resident accounts, password recovery, rate limiting, deployment secrets, and production cookie/CORS configuration remain incomplete. Legacy resident records may still contain plaintext passwords in browser storage.
+4. **Authentication:** committee and resident authentication are server-side; resident passwords are hashed and never returned to the frontend. Login/password-change throttling is durable in SQLite. Production still requires deployment secrets, explicit HTTPS origins, trusted proxy configuration, and an operational password-reset process. Legacy plaintext passwords remain in a browser until the committee verifies the server import and explicitly cleans up that browser.
 5. **Reporting semantics:** the local Tally books reconcile to their reported closing balances; the opening cash variance, missing AGM detail amount, and incomplete AMC support exports are shown in Reports. These reports still read mutable browser storage, not a protected journal. No close controls, full ageing, or append-only audit log exist.
 6. **Large media:** event/office-bearer images can be held in browser storage as data URLs, which does not scale and is not a production file-storage strategy.
 
 ## Repository notes at inspection
 
-The active branch is `initial`. The repository has a tracked `.github/workflows/deploy-pages.yml`; GitHub Pages deployment does not host the FastAPI service or private Tally data. The local `data/` directory, source workbooks, build outputs, dependencies, and importer runtime are excluded from Git.
+The active branch is `initial`. The repository has a tracked `.github/workflows/deploy-pages.yml`, but GitHub Pages deployment does not host the FastAPI service, SQLite database, or private Tally data and is not the current deployment path. The local `data/` directory, source workbooks, build outputs, dependencies, generated database backups, and importer runtime are excluded from Git.
