@@ -97,6 +97,26 @@ OFFICIAL_PUBLIC_CONTACTS = [
         "source": "Official/public",
         "note": "Emergency ambulance service; availability can vary by state and location.",
     },
+    {"id": "fire-101", "label": "Fire service", "number": "101", "kind": "emergency", "source": "Official/public", "note": "Fire emergency number supplied by APCLRWA."},
+    {"id": "bescom-1912", "label": "BESCOM complaints", "number": "1912", "kind": "local", "source": "Official/public", "note": "Electricity complaint helpline supplied by APCLRWA."},
+    {"id": "cyber-1930", "label": "Cyber fraud helpline", "number": "1930", "kind": "local", "source": "Official/public", "note": "Cyber fraud reporting helpline supplied by APCLRWA."},
+]
+LOCAL_SERVICE_CONTACTS = [
+    {"id": "bbmp-street-light-manju", "label": "BBMP street light — Manju", "number": "9448800005"},
+    {"id": "bbmp-sweeping-myladri", "label": "BBMP sweeping — Myladri", "number": "9980365356"},
+    {"id": "bescom-local-complaints", "label": "BESCOM complaints — local contact", "number": "8277884014"},
+    {"id": "bwssb-local", "label": "BWSSB water supply", "number": "9620480465"},
+    {"id": "dry-wet-waste", "label": "Dry & wet waste", "number": "9535161492"},
+    {"id": "kodigehalli-police", "label": "Kodigehalli Police Station", "number": "080-22943703"},
+    {"id": "maruti-ambulance-1", "label": "Maruti Ambulance Service", "number": "9535666127"},
+    {"id": "maruti-ambulance-2", "label": "Maruti Ambulance Service", "number": "9916020005"},
+    {"id": "bairaveshwara-ambulance", "label": "Bairaveshwara Ambulance", "number": "9845933067"},
+    {"id": "hebbal-fire-station", "label": "Hebbal / Thanisandra Fire Station", "number": "080-22971542"},
+    {"id": "snake-catcher-revanna", "label": "Snake catcher — Revanna Gowda", "number": "9945439072"},
+    {"id": "snake-catcher-praveen", "label": "Snake catcher — Praveen Bose", "number": "7829822133"},
+    {"id": "snake-catcher-mohan", "label": "Snake catcher — Mohan", "number": "9845080903"},
+    {"id": "water-tanker-manohar", "label": "Water tanker — Manohar", "number": "8050529768"},
+    {"id": "water-tanker-suraksha", "label": "Suraksha Tanker", "number": "9844616879"},
 ]
 
 
@@ -416,6 +436,12 @@ def public_resident(resident: dict[str, Any], account: dict[str, Any] | None) ->
 def public_contacts(office_bearers: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return official numbers plus committee-published association contacts."""
     contacts = copy.deepcopy(OFFICIAL_PUBLIC_CONTACTS)
+    contacts.extend({
+        **service,
+        "kind": "local",
+        "source": "Association-maintained",
+        "note": "Local service number supplied by APCLRWA; please confirm availability.",
+    } for service in LOCAL_SERVICE_CONTACTS)
     for person in office_bearers:
         phone = str(person.get("phone") or "").strip()
         if not phone:
