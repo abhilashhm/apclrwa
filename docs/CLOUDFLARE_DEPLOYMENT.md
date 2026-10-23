@@ -8,7 +8,7 @@ remains disabled.
 
 - Worker: `apclrwa`
 - URL: `https://apclrwa.apclrwa-community-portal.workers.dev`
-- Legacy fallback URL: `https://apclrwa-community-portal.apclrwa-community-portal.workers.dev`
+- Legacy Worker `apclrwa-community-portal`: deleted October 23, 2026
 - D1 database: `apclrwa-portal`
 - D1 database ID: `4abbc8f9-2951-40a7-bdd5-25a2d21c7963`
 - Deployment version ID: `9d62a98f-f73e-4863-bed4-bc8f807fa434` (October 23, 2026)
@@ -38,6 +38,8 @@ The implementation keeps local development unchanged:
 - The short Worker hostname `apclrwa.apclrwa-community-portal.workers.dev` was
   verified on October 23, 2026; `/api/health` returned `{"status":"ok"}` and
   the portal collection versions, including `v21-ledger`, remained unchanged.
+- The legacy Worker was deleted on October 23, 2026. Its former hostname now
+  returns HTTP 404; the active `apclrwa` Worker and D1 database are unaffected.
 
 ## Cloudflare shape
 
