@@ -86,6 +86,8 @@ remain in the separate imported ledger until a later, explicitly approved
 mapping.
 
 The deployed Worker is available at
-`https://apclrwa-community-portal.apclrwa-community-portal.workers.dev`. A
-committee admin must be bootstrapped into the new remote D1 database once by
-following the private-password steps in the deployment document.
+`https://apclrwa.apclrwa-community-portal.workers.dev`. The previous
+`https://apclrwa-community-portal.apclrwa-community-portal.workers.dev` address
+is retained temporarily as a fallback. A committee admin must be bootstrapped
+into the remote D1 database once by following the private-password steps in the
+deployment document.

@@ -6,11 +6,12 @@ The APCLRWA Worker and D1 database were updated and verified on **October 23,
 2026**. The existing GitHub Pages workflow is not used by this migration and
 remains disabled.
 
-- Worker: `apclrwa-community-portal`
-- URL: `https://apclrwa-community-portal.apclrwa-community-portal.workers.dev`
+- Worker: `apclrwa`
+- URL: `https://apclrwa.apclrwa-community-portal.workers.dev`
+- Legacy fallback URL: `https://apclrwa-community-portal.apclrwa-community-portal.workers.dev`
 - D1 database: `apclrwa-portal`
 - D1 database ID: `4abbc8f9-2951-40a7-bdd5-25a2d21c7963`
-- Deployment version ID: `2839f99a-2a7e-4436-885c-3d325956f6f5` (October 23, 2026)
+- Deployment version ID: `9d62a98f-f73e-4863-bed4-bc8f807fa434` (October 23, 2026)
 - Applied migrations: `0001_initial.sql`, `0002_password_scheme.sql`, `0003_accounting.sql`
 
 The public/static surface is live and independently checked. Remote D1 has an
@@ -33,7 +34,10 @@ The implementation keeps local development unchanged:
   and do not require R2 for the current snapshot size.
 - Normalized accounting endpoints and the **Accounting Controls** committee UI
   use `migrations/0003_accounting.sql`, which is now applied to remote D1 and
-  deployed with Worker version `2839f99a-2a7e-4436-885c-3d325956f6f5`.
+  deployed with Worker version `9d62a98f-f73e-4863-bed4-bc8f807fa434`.
+- The short Worker hostname `apclrwa.apclrwa-community-portal.workers.dev` was
+  verified on October 23, 2026; `/api/health` returned `{"status":"ok"}` and
+  the portal collection versions, including `v21-ledger`, remained unchanged.
 
 ## Cloudflare shape
 
