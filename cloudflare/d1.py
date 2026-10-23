@@ -83,7 +83,15 @@ class D1Store:
             return _plain(await self.database.batch(prepared))
         except Exception as exc:
             message = str(exc)
-            if "portal revision conflict" in message.lower() or "auth rate limit" in message.lower() or "unique constraint" in message.lower() or "constraint failed" in message.lower():
+            if (
+                "portal revision conflict" in message.lower()
+                or "auth rate limit" in message.lower()
+                or "unique constraint" in message.lower()
+                or "constraint failed" in message.lower()
+                or "accounting period is closed" in message.lower()
+                or "journal entry is immutable" in message.lower()
+                or "journal entry lines are immutable" in message.lower()
+            ):
                 raise D1Conflict(message) from exc
             raise D1Error(message) from exc
 

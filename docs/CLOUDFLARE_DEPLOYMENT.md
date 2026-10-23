@@ -2,7 +2,7 @@
 
 ## Current status
 
-The APCLRWA Worker and D1 database were created and deployed on **October 21,
+The APCLRWA Worker and D1 database were updated and verified on **October 23,
 2026**. The existing GitHub Pages workflow is not used by this migration and
 remains disabled.
 
@@ -10,8 +10,8 @@ remains disabled.
 - URL: `https://apclrwa-community-portal.apclrwa-community-portal.workers.dev`
 - D1 database: `apclrwa-portal`
 - D1 database ID: `4abbc8f9-2951-40a7-bdd5-25a2d21c7963`
-- Deployment version ID: `e7380724-3f39-4b82-8f12-029d5c742760`
-- Applied migrations: `0001_initial.sql`, `0002_password_scheme.sql`
+- Deployment version ID: `2839f99a-2a7e-4436-885c-3d325956f6f5` (October 23, 2026)
+- Applied migrations: `0001_initial.sql`, `0002_password_scheme.sql`, `0003_accounting.sql`
 
 The public/static surface is live and independently checked. Remote D1 has an
 active committee account (`abhilashhm`). Its password is not available from the
@@ -31,6 +31,9 @@ The implementation keeps local development unchanged:
   `501`. Tally snapshots use a separate authenticated bounded JSON upload at
   `/api/admin/tally-import/upload` (the `/apply` alias accepts the same envelope)
   and do not require R2 for the current snapshot size.
+- Normalized accounting endpoints and the **Accounting Controls** committee UI
+  use `migrations/0003_accounting.sql`, which is now applied to remote D1 and
+  deployed with Worker version `2839f99a-2a7e-4436-885c-3d325956f6f5`.
 
 ## Cloudflare shape
 
@@ -145,19 +148,23 @@ following commands remain useful for a future redeploy:
    batches require it; the current normalized `data/tally-import.json` snapshot
    is uploaded directly by a committee member and is not committed or deployed.
 
-The deployed site and authenticated committee portal were checked. The Tally
-snapshot was uploaded and verified in remote D1. The existing `abhilashhm`
-account was preserved; the temporary migration account used for this upload
-was signed out and removed afterward.
+The deployed homepage menu was verified in the browser in this order: Home,
+Our Community, Directory, Contacts, Updates, Transparency. The public page
+loads, `/api/health` returns `ok`, and the HTML references the built frontend
+asset. Remote D1 still contains Tally import `TALLY-2026-10-04-v1` (489 source
+rows; 608 ledger rows including transfers). The October 23 frontend deployment
+did not modify D1. The committee-only workflows were not re-tested in this
+browser session because it was not signed in.
 
 The Worker/D1 deployment is complete. The Worker accepts the normalized Tally
-snapshot through the authenticated JSON upload route; only the old local-file
-and browser migration routes remain unavailable in production.
+snapshot through the authenticated JSON upload route, and the normalized
+accounting endpoints are available to committee sessions. Only the old
+browser migration routes remain unavailable in production.
 
 ## Tally snapshot upload
 
-After the Worker version containing the upload route is deployed and a real
-committee account has been bootstrapped:
+With the current Worker deployed and the `abhilashhm` committee account
+available:
 
 1. Open the deployed Worker URL, not the localhost development URL.
 2. Sign in as a committee member.
@@ -166,6 +173,17 @@ committee account has been bootstrapped:
 5. Select the existing local file `data/tally-import.json`.
 6. Confirm the success message and review **Reports** for the imported ledger,
    opening balances, and Tally reconciliation.
+
+The separate **Accounting Controls** section is for new verified journal
+postings, audit events, and annual period controls. It is not a conversion tool
+for historic Tally rows.
+
+The Data Migration panel detects the deployment through the same-origin
+`/api/admin/tally-import` capability response. The local API exposes that route
+(including a 404 when its snapshot file is absent), while the Cloudflare Worker
+returns 501 because it cannot read the local filesystem. The panel therefore
+keeps **Apply Tally import** available on localhost and hides it on the Worker;
+the JSON upload action remains available in both environments.
 
 The upload validates the snapshot server-side, accepts only posted book ledger
 entries, appends new stable IDs without overwriting existing records, rejects

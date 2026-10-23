@@ -1,8 +1,10 @@
 export type AuthUser = {id:string;username:string;displayName:string;role:'committee'|'resident';residentId?:string;tempPassword?:boolean};
 export type EventItem = {id:string;tag:string;title:string;text:string;date:string;location:string;image?:string;link?:string;residentsOnly?:boolean;createdAt?:string};
 export type OfficeBearer = {id?:string;name:string;display:string;role:string;phone:string;image?:string};
+export type PublicProfessional = {name:string;house:string;profession:string;contact?:string};
+export type PublicContact = {id:string;label:string;number:string;kind:'emergency'|'local';source:'Official/public'|'Association-maintained';note?:string};
 export type PaymentDetails = {date:string;mode:string;details:string};
-export type ResidentRecord = {id:string;house:string;cross:string;name:string;mobile:string;residentType:'Owner'|'Tenant'|'Unspecified';initialCharge:number;initialChargePaid:boolean;membershipPayment?:PaymentDetails;active:boolean;createdAt:string;tempPassword?:boolean;hasAccount?:boolean};
+export type ResidentRecord = {id:string;house:string;cross:string;name:string;mobile:string;residentType:'Owner'|'Tenant'|'Unspecified';profession?:string;tenantOwnerName?:string;publicProfessionalListing?:boolean;initialCharge:number;initialChargePaid:boolean;membershipPayment?:PaymentDetails;active:boolean;createdAt:string;tempPassword?:boolean;hasAccount?:boolean};
 // Password is a write-only request field. It is never part of a resident response/cache.
 export type ResidentWrite = ResidentRecord & {password?:string};
 export type LedgerEntry = {id:string;kind:string;amount:number;house?:string;residentId?:string;paymentId?:string;description:string;mode:string;date:string;financialYear:string;amcForFinancialYear?:string;status:string;expenseType?:string;direction?:string;donorName?:string;donationType?:string;bucket?:string;transferOf?:string;createdAt?:string};
@@ -25,6 +27,11 @@ export type PortalCollections = {
 export type CollectionName = keyof PortalCollections;
 export type CollectionWrite<K extends CollectionName> = K extends 'residents' ? ResidentWrite[] : PortalCollections[K];
 export type PortalSnapshot = {revision:number;collections:PortalCollections;currentResident:ResidentRecord|null};
-export type PublicContent = {events:EventItem[];officeBearers:OfficeBearer[]};
+export type PublicContent = {events:EventItem[];officeBearers:OfficeBearer[];professionals:PublicProfessional[];contacts:PublicContact[]};
 export type MigrationCollections = Partial<Omit<PortalCollections,'tallyReconciliation'>>;
 export type MigrationPreview = {counts:Record<string,number>;warnings:string[];revision:number};
+export type AccountingAccount = {id:string;code:string;name:string;accountType:'Asset'|'Liability'|'Equity'|'Income'|'Expense';parentId?:string|null;active:boolean;createdAt:string;updatedAt:string};
+export type AccountingPeriod = {id:string;financialYear:string;startDate:string;endDate:string;status:'Open'|'Closed';closedAt?:string|null;closedBy?:string|null;closeReason?:string|null;closeAuthorization?:string|null;reopenedAt?:string|null;reopenedBy?:string|null;reopenReason?:string|null;reopenAuthorization?:string|null;createdAt:string};
+export type JournalLineRecord = {id:string;lineNo:number;accountId:string;accountCode?:string;accountName?:string;description?:string|null;debitPaise:number;creditPaise:number};
+export type JournalEntryRecord = {id:string;date:string;financialYear:string;periodId:string;description:string;status:'Draft'|'Posted';sourceType?:string|null;sourceId?:string|null;reversalOfEntryId?:string|null;correctionOfEntryId?:string|null;createdBy:string;createdAt:string;postedBy?:string|null;postedAt?:string|null;lines:JournalLineRecord[]};
+export type AuditEventRecord = {id:string;occurredAt:string;actorUserId:string;actorUsername:string;action:string;entityType:string;entityId:string;financialYear?:string|null;periodId?:string|null;reason?:string|null;authorization?:string|null;details?:Record<string,unknown>};

@@ -62,6 +62,24 @@ DEFAULT_OFFICE_BEARERS = [
     {"name": "Sh. Vasudev", "display": "Sri. Vasudev", "role": "Executive Committee Member", "phone": ""},
     {"name": "Sh. Rakesh Naidu", "display": "Sri. Rakesh Naidu", "role": "Executive Committee Member", "phone": ""},
 ]
+OFFICIAL_PUBLIC_CONTACTS = [
+    {
+        "id": "emergency-112",
+        "label": "Emergency response",
+        "number": "112",
+        "kind": "emergency",
+        "source": "Official/public",
+        "note": "Pan-India emergency response number for police, fire and medical help.",
+    },
+    {
+        "id": "emergency-108",
+        "label": "Ambulance / emergency medical transport",
+        "number": "108",
+        "kind": "emergency",
+        "source": "Official/public",
+        "note": "Emergency ambulance service; availability can vary by state and location.",
+    },
+]
 
 
 def _auth() -> Any:
@@ -282,11 +300,58 @@ def _resident_for_user(connection: sqlite3.Connection, collections: dict[str, An
     return resident
 
 
-def _public_resident(resident: dict[str, Any], account: sqlite3.Row | None) -> dict[str, Any]:
+def _public_resident(
+    resident: dict[str, Any],
+    account: sqlite3.Row | None,
+    *,
+    include_private: bool = False,
+) -> dict[str, Any]:
     sanitized = json_record(_model(ROW_MODELS["residents"], resident, "stored resident"))
+    if not include_private:
+        # A resident snapshot may include the opted-in profession because it
+        # is suitable for a public directory. The tenant/property-owner name
+        # and an unconsented profession remain committee-only fields. The
+        # consent bit itself is also committee-only metadata.
+        if not sanitized.get("publicProfessionalListing"):
+            sanitized.pop("profession", None)
+        sanitized.pop("tenantOwnerName", None)
+        sanitized.pop("publicProfessionalListing", None)
     sanitized["hasAccount"] = account is not None
     sanitized["tempPassword"] = bool(account is not None and account["must_change_password"])
     return sanitized
+
+
+def _public_professional(resident: dict[str, Any]) -> dict[str, Any] | None:
+    """Project only explicitly consented, active professional directory rows."""
+    sanitized = json_record(_model(ROW_MODELS["residents"], resident, "stored resident"))
+    if not sanitized.get("active") or not sanitized.get("publicProfessionalListing") or not sanitized.get("profession"):
+        return None
+    return {
+        "name": sanitized["name"],
+        "house": sanitized["house"],
+        "profession": sanitized["profession"],
+        "contact": sanitized["mobile"],
+    }
+
+
+def _public_contacts(office_bearers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return official numbers plus committee-published association contacts."""
+    contacts = copy.deepcopy(OFFICIAL_PUBLIC_CONTACTS)
+    for person in office_bearers:
+        phone = str(person.get("phone") or "").strip()
+        if not phone:
+            continue
+        role = str(person.get("role") or "Association contact")
+        name = str(person.get("display") or person.get("name") or "")
+        contacts.append({
+            "id": "association-" + str(person.get("id") or person.get("name")),
+            "label": role + (" — " + name if name else ""),
+            "number": phone,
+            "kind": "local",
+            "source": "Association-maintained",
+            "note": "Published by the APCLRWA committee; please confirm availability.",
+        })
+    return contacts
 
 
 def _snapshot(connection: sqlite3.Connection, revision: int, collections: dict[str, Any], user: dict[str, Any]) -> dict[str, Any]:
@@ -298,12 +363,15 @@ def _snapshot(connection: sqlite3.Connection, revision: int, collections: dict[s
     }
     if account["role"] == "committee":
         visible = copy.deepcopy(collections)
-        visible["residents"] = [_public_resident(row, accounts.get(row["id"])) for row in collections["residents"]]
+        visible["residents"] = [
+            _public_resident(row, accounts.get(row["id"]), include_private=True)
+            for row in collections["residents"]
+        ]
         current = None
     else:
         resident = _resident_for_user(connection, collections, user)
         resident_id = resident["id"]
-        current = _public_resident(resident, accounts.get(resident_id))
+        current = _public_resident(resident, accounts.get(resident_id), include_private=False)
         visible = {
             "residents": [current],
             "ledger": [row for row in collections["ledger"] if row.get("residentId") == resident_id and row["status"] == "Posted" and row["kind"] in RECEIPT_KINDS],
@@ -1033,9 +1101,16 @@ def public_content(response: Response) -> dict[str, Any]:
     with _auth().database() as connection:
         connection.execute("BEGIN")
         _, collections = _load(connection)
+        professionals = []
+        for resident in collections["residents"]:
+            listing = _public_professional(resident)
+            if listing is not None:
+                professionals.append(listing)
         return {
             "events": [row for row in collections["events"] if not row.get("residentsOnly", False)],
             "officeBearers": collections["officeBearers"],
+            "professionals": professionals,
+            "contacts": _public_contacts(collections["officeBearers"]),
         }
 
 

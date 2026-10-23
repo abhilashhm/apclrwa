@@ -100,6 +100,23 @@ export function previewMigration(collections:MigrationCollections) {
 export function importMigration(collections:MigrationCollections,revision:number) {
   return mutation(()=>postJSON<PortalSnapshot>('/api/admin/migration/import',{collections,revision}));
 }
+export type TallyImportEnvironment = 'local'|'cloudflare'|'unknown';
+/**
+ * Detect the server behind the current same-origin API without inferring from
+ * hostnames. The local API exposes the private snapshot route (404 is still a
+ * local capability response when no snapshot exists); the Worker deliberately
+ * answers 501 because it cannot read the local filesystem.
+ */
+export async function detectTallyImportEnvironment():Promise<TallyImportEnvironment> {
+  try {
+    await apiRequest<unknown>('/api/admin/tally-import',{},false);
+    return 'local';
+  } catch(error) {
+    if(error instanceof ApiError&&error.status===501)return 'cloudflare';
+    if(error instanceof ApiError&&error.status!==0)return 'local';
+    return 'unknown';
+  }
+}
 export function applyTallyImport() {
   return mutation(snapshot=>postJSON<PortalSnapshot>('/api/admin/tally-import/apply',{revision:snapshot.revision}));
 }
@@ -116,8 +133,8 @@ export async function loadPublicContent():Promise<void> {
   update({publicLoading:true,publicError:''});
   try {
     const content=await apiRequest<PublicContent>('/api/public/content',{},false);
-    if(!Array.isArray(content?.events)||!Array.isArray(content?.officeBearers))throw new Error('The server returned incomplete public content.');
-    update({publicContent:{events:content.events.filter(event=>!event.residentsOnly),officeBearers:content.officeBearers}});
+    if(!Array.isArray(content?.events)||!Array.isArray(content?.officeBearers)||!Array.isArray(content?.professionals)||!Array.isArray(content?.contacts))throw new Error('The server returned incomplete public content.');
+    update({publicContent:{events:content.events.filter(event=>!event.residentsOnly),officeBearers:content.officeBearers,professionals:content.professionals,contacts:content.contacts}});
   } catch(error) {update({publicContent:null,publicError:errorMessage(error)})}
   finally {update({publicLoading:false})}
 }

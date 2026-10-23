@@ -80,6 +80,24 @@ DEFAULT_OFFICE_BEARERS = [
     {"name": "Sh. Vasudev", "display": "Sri. Vasudev", "role": "Executive Committee Member", "phone": ""},
     {"name": "Sh. Rakesh Naidu", "display": "Sri. Rakesh Naidu", "role": "Executive Committee Member", "phone": ""},
 ]
+OFFICIAL_PUBLIC_CONTACTS = [
+    {
+        "id": "emergency-112",
+        "label": "Emergency response",
+        "number": "112",
+        "kind": "emergency",
+        "source": "Official/public",
+        "note": "Pan-India emergency response number for police, fire and medical help.",
+    },
+    {
+        "id": "emergency-108",
+        "label": "Ambulance / emergency medical transport",
+        "number": "108",
+        "kind": "emergency",
+        "source": "Official/public",
+        "note": "Emergency ambulance service; availability can vary by state and location.",
+    },
+]
 
 
 def defaults() -> dict[str, Any]:
@@ -393,3 +411,23 @@ def public_resident(resident: dict[str, Any], account: dict[str, Any] | None) ->
     sanitized["hasAccount"] = account is not None
     sanitized["tempPassword"] = bool(account is not None and account.get("must_change_password"))
     return sanitized
+
+
+def public_contacts(office_bearers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return official numbers plus committee-published association contacts."""
+    contacts = copy.deepcopy(OFFICIAL_PUBLIC_CONTACTS)
+    for person in office_bearers:
+        phone = str(person.get("phone") or "").strip()
+        if not phone:
+            continue
+        role = str(person.get("role") or "Association contact")
+        name = str(person.get("display") or person.get("name") or "")
+        contacts.append({
+            "id": "association-" + str(person.get("id") or person.get("name")),
+            "label": role + (" — " + name if name else ""),
+            "number": phone,
+            "kind": "local",
+            "source": "Association-maintained",
+            "note": "Published by the APCLRWA committee; please confirm availability.",
+        })
+    return contacts

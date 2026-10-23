@@ -47,6 +47,12 @@ The public endpoint returns only public events. Resident-only events are
 filtered server-side and are available only through an authenticated portal
 snapshot.
 
+Resident records include owner/tenant status, an optional private profession,
+and a private property-owner name for tenant records. A resident can be listed
+on the public professional directory only when the committee records explicit
+consent. The homepage also separates official/public emergency contacts from
+association-maintained numbers.
+
 ## Checks
 
 ```powershell
@@ -72,6 +78,12 @@ uv run pywrangler dev --local --port 8787 --var APCLRWA_ENV:development --var AP
 See [docs/CLOUDFLARE_DEPLOYMENT.md](docs/CLOUDFLARE_DEPLOYMENT.md) for D1
 migrations, bindings, usage checks, and the Tally JSON upload workflow. The
 older browser-data import still requires local SQLite development.
+
+The committee portal includes **Accounting Controls** for the normalized
+chart-of-accounts, journal, audit and financial-year close foundation. Its D1
+tables are created by `migrations/0003_accounting.sql`; historic Tally rows
+remain in the separate imported ledger until a later, explicitly approved
+mapping.
 
 The deployed Worker is available at
 `https://apclrwa-community-portal.apclrwa-community-portal.workers.dev`. A

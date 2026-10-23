@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState,type ChangeEvent} from 'react';
 import {cleanupImportedLegacy,detectLegacyKeys,readLegacyForPreview,type LegacySource} from './legacyMigration';
-import {applyTallyImport,importMigration,previewMigration,uploadTallyImport} from './portalStore';
+import {applyTallyImport,detectTallyImportEnvironment,importMigration,previewMigration,uploadTallyImport,type TallyImportEnvironment} from './portalStore';
 import type {MigrationPreview} from './portalTypes';
 import {MutationNotice,useMutation} from './useMutation';
 
@@ -11,9 +11,15 @@ export default function LegacyMigrationPanel() {
   const[imported,setImported]=useState(false);
   const[message,setMessage]=useState('');
   const[messageTone,setMessageTone]=useState<'success'|'info'|'error'>('success');
+  const[tallyEnvironment,setTallyEnvironment]=useState<TallyImportEnvironment>('unknown');
   const tallyFileInput=useRef<HTMLInputElement>(null);
   const mutation=useMutation();
   const notify=(text:string,tone:'success'|'info'|'error'='success')=>{setMessage(text);setMessageTone(tone)};
+  useEffect(()=>{
+    let active=true;
+    void detectTallyImportEnvironment().then(environment=>{if(active)setTallyEnvironment(environment)});
+    return()=>{active=false};
+  },[]);
   const inspect=async()=>{
     setPreview(null);setSource(null);setImported(false);notify('');
     await mutation.run(async()=>{
@@ -71,6 +77,6 @@ export default function LegacyMigrationPanel() {
       <div className="event-modal-actions"><button disabled={mutation.saving} onClick={()=>setDetection(detectLegacyKeys())}>Check legacy keys</button><button className="admin-primary" disabled={mutation.saving||!detection.supported.length} onClick={inspect}>Preview legacy import</button>{preview&&!imported&&<button className="admin-primary" disabled={mutation.saving} onClick={confirmImport}>Confirm server import</button>}</div>
       {imported&&<div className="legacy-cleanup-warning"><p><strong>Permanent browser cleanup</strong> — verify the imported server records before deleting originals. The import created a server backup. This removes the imported legacy collections, including any old passwords, from this browser only.</p><button className="danger-link" disabled={mutation.saving} onClick={cleanup}>Permanently remove imported browser originals</button></div>}
     </section>
-      <section className="admin-panel"><div className="panel-head"><div><span>SERVER IMPORT</span><h3>Tally snapshot</h3></div><div style={{display:'flex',gap:'8px',flexWrap:'wrap',justifyContent:'flex-end'}}><button type="button" className="admin-primary" disabled={mutation.saving} onClick={tally}>Apply Tally import</button><button type="button" className="admin-primary" disabled={mutation.saving} onClick={()=>tallyFileInput.current?.click()}>Upload JSON to Cloudflare</button><input ref={tallyFileInput} type="file" accept="application/json,.json" aria-label="Choose Tally JSON snapshot" hidden disabled={mutation.saving} onChange={uploadTallyFile}/></div></div><p className="module-note">Apply Tally import uses the configured local-server snapshot. Upload JSON to Cloudflare sends the selected snapshot as application/json with the current portal revision. To reach Cloudflare, use this action from the deployed Worker URL; localhost targets the local API.</p></section>
+       <section className="admin-panel"><div className="panel-head"><div><span>SERVER IMPORT</span><h3>Tally snapshot</h3></div><div style={{display:'flex',gap:'8px',flexWrap:'wrap',justifyContent:'flex-end'}}>{tallyEnvironment!=='cloudflare'&&<button type="button" className="admin-primary" disabled={mutation.saving||tallyEnvironment==='unknown'} onClick={tally}>{tallyEnvironment==='unknown'?'Checking local import…':'Apply Tally import'}</button>}<button type="button" className="admin-primary" disabled={mutation.saving} onClick={()=>tallyFileInput.current?.click()}>Upload JSON to Cloudflare</button><input ref={tallyFileInput} type="file" accept="application/json,.json" aria-label="Choose Tally JSON snapshot" hidden disabled={mutation.saving} onChange={uploadTallyFile}/></div></div><p className="module-note">{tallyEnvironment==='cloudflare'?'Cloudflare Worker detected: it cannot read the local Tally snapshot. Upload the existing JSON snapshot instead.':tallyEnvironment==='local'?'Local API detected: Apply Tally import uses the configured local-server snapshot.':'Checking the same-origin API to determine whether a local Tally snapshot is available.'} Upload JSON to Cloudflare sends the selected snapshot as application/json with the current portal revision.</p></section>
   </section>;
 }

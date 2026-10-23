@@ -362,8 +362,10 @@ app.add_middleware(
 # this keeps the authentication/database module free of an import cycle while
 # ensuring every process exposes the same server-backed portal API.
 from . import portal as portal_api
+from . import accounting as accounting_api
 
 app.include_router(portal_api.router)
+app.include_router(accounting_api.router)
 
 
 @app.middleware("http")
@@ -392,6 +394,7 @@ async def enforce_transport_and_origin(request: Request, call_next: Any) -> Resp
 def startup() -> None:
     initialize_database()
     portal_api.initialize_portal()
+    accounting_api.initialize_accounting()
 
 
 @app.get("/api/health")

@@ -9,6 +9,9 @@ Updated 2026-10-09 after importing the provided Tally exports locally.
 - Operational portal collections are stored in SQLite behind role-checked, revision-checked API endpoints. Resident data is server-filtered; passwords are hashed server-side and are never returned to the frontend.
 - Resident payment claims use server-side idempotency keys. Committee approval creates the associated posted receipt atomically rather than writing browser-local records.
 - Browser/localStorage data is available only through an explicit committee migration preview/import flow. The server validates the import, strips legacy credentials, rejects conflicts, and creates a private pre-import database backup.
+- Resident directory records now support owner/tenant classification, a private property-owner name for tenant records, an optional profession, and explicit opt-in for the public professional directory. Resident account provisioning and password reset remain committee-controlled.
+- The homepage now has a consent-filtered professional directory and separate official/public emergency versus association-maintained contact sections. No resident is listed publicly without explicit consent.
+- A normalized accounting foundation now exists for new verified postings: chart of accounts, balanced integer-paise journals, immutable posted entries, linked reversals/corrections, append-only audit events, and annual period close/reopen controls.
 - `backend/tally_import.py` reads the supplied Excel exports and produces `data/tally-import.json`; the private `data/` directory is excluded from Git.
 - Locally, a committee user can explicitly apply the configured snapshot through `/api/admin/tally-import/apply`. In Cloudflare, the same normalized JSON is uploaded through `/api/admin/tally-import/upload`; the Worker merges imported rows by stable IDs and presents Tally cash/bank reconciliation and source-ledger control checks in Reports.
 - The import is repeatable and does not edit source workbooks. Bank and cash book source totals reconcile to their reported closing balances.
@@ -21,7 +24,7 @@ Updated 2026-10-09 after importing the provided Tally exports locally.
 - AGM ledger voucher details omit ₹800 present in the cash book/closing balance. Do not infer its payee or purpose from the incomplete row.
 - The current FY AMC detail exports only run through July and total ₹18,000, while the complete bank/cash books through 2026-10-04 show ₹41,000. This is an incomplete supporting-export gap, not a bank/cash roll-forward difference.
 - Existing browser data may already contain manually entered items. The importer only deduplicates exact stable IDs and does not certify semantic duplicates against prior manual rows.
-- Immutable double-entry journals, verified bank statement matching, append-only business audit logs, period closing, operational backup/restore procedures, deployment secrets, and production hosting remain outstanding. Database backups are currently created before explicit browser/Tally imports.
+- The normalized journal/audit/period layer is implemented but has not yet replaced historic Tally collection reporting or operational payment/expense workflows. Verified bank statement matching, receipt numbering, full journal-derived reports, operational backup/restore procedures, deployment secrets, and production hosting remain outstanding. Database backups are currently created before explicit browser/Tally imports.
 
 ## Tally controls from supplied books
 

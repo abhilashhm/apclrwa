@@ -31,6 +31,13 @@ try:
         TallyImport,
         TallyImportApply,
         TallyReconciliation,
+        AccountCreate,
+        AccountingPeriodCreate,
+        JournalCorrectionRequest,
+        JournalEntryCreate,
+        JournalPostRequest,
+        JournalReversalRequest,
+        PeriodActionRequest,
     )
 except ImportError:
     from portal_models import (
@@ -45,6 +52,13 @@ except ImportError:
     TallyImport,
     TallyImportApply,
     TallyReconciliation,
+    AccountCreate,
+    AccountingPeriodCreate,
+    JournalCorrectionRequest,
+    JournalEntryCreate,
+    JournalPostRequest,
+    JournalReversalRequest,
+    PeriodActionRequest,
     )
 
 try:
@@ -68,6 +82,7 @@ try:
         utc_now,
     )
     from .d1 import D1Conflict, D1Error, D1Store
+    from . import accounting
 except ImportError:
     import domain
     from auth import (
@@ -89,6 +104,7 @@ except ImportError:
     utc_now,
     )
     from d1 import D1Conflict, D1Error, D1Store
+    import accounting
 
 
 app = FastAPI(title="APCLRWA Portal API", version="0.1.0-cloudflare")
@@ -303,8 +319,23 @@ async def _resident_for_user(store: D1Store, collections: dict[str, Any], user: 
     return resident
 
 
-def _public_resident(resident: dict[str, Any], account: dict[str, Any] | None) -> dict[str, Any]:
-    return domain.public_resident(resident, account)
+def _public_resident(
+    resident: dict[str, Any],
+    account: dict[str, Any] | None,
+    *,
+    include_private: bool = False,
+) -> dict[str, Any]:
+    sanitized = domain.public_resident(resident, account)
+    if not include_private:
+        # A resident snapshot may include the opted-in profession because it
+        # is suitable for a public directory. The tenant/property-owner name
+        # and an unconsented profession remain committee-only fields. The
+        # consent bit itself is also committee-only metadata.
+        if not sanitized.get("publicProfessionalListing"):
+            sanitized.pop("profession", None)
+        sanitized.pop("tenantOwnerName", None)
+        sanitized.pop("publicProfessionalListing", None)
+    return sanitized
 
 
 async def _snapshot(store: D1Store, revision: int, collections: dict[str, Any], user: dict[str, Any]) -> dict[str, Any]:
@@ -313,12 +344,15 @@ async def _snapshot(store: D1Store, revision: int, collections: dict[str, Any], 
     accounts = {row["resident_id"]: row for row in account_rows}
     if account["role"] == "committee":
         visible = copy.deepcopy(collections)
-        visible["residents"] = [_public_resident(row, accounts.get(row["id"])) for row in collections["residents"]]
+        visible["residents"] = [
+            _public_resident(row, accounts.get(row["id"]), include_private=True)
+            for row in collections["residents"]
+        ]
         current = None
     else:
         resident = await _resident_for_user(store, collections, user)
         resident_id = resident["id"]
-        current = _public_resident(resident, accounts.get(resident_id))
+        current = _public_resident(resident, accounts.get(resident_id), include_private=False)
         visible = {
             "residents": [current],
             "ledger": [row for row in collections["ledger"] if row.get("residentId") == resident_id and row["status"] == "Posted" and row["kind"] in domain.RECEIPT_KINDS],
@@ -870,6 +904,17 @@ async def public_content(request: Request, response: Response) -> dict[str, Any]
     return {
         "events": [row for row in collections["events"] if not row.get("residentsOnly", False)],
         "officeBearers": collections["officeBearers"],
+        "professionals": [
+            {
+                "name": row["name"],
+                "house": row["house"],
+                "profession": row["profession"],
+                "contact": row["mobile"],
+            }
+            for row in collections["residents"]
+            if row.get("active") and row.get("publicProfessionalListing") and row.get("profession")
+        ],
+        "contacts": domain.public_contacts(collections["officeBearers"]),
     }
 
 
@@ -943,3 +988,200 @@ async def unsupported_local_storage_routes(request: Request) -> Response:
         status_code=501,
         media_type="application/json",
     )
+
+
+@app.get("/api/admin/accounting/accounts")
+@app.get("/api/admin/accounting/chart-of-accounts")
+async def accounting_accounts(request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    await require_committee(store, request)
+    try:
+        result = await accounting.list_accounts(store)
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"accounts": result}
+
+
+@app.post("/api/admin/accounting/accounts")
+@app.post("/api/admin/accounting/chart-of-accounts")
+async def accounting_create_account(request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    user = await require_committee(store, request)
+    payload = await _body(request, AccountCreate, limit=32 * 1024)
+    try:
+        result = await accounting.create_account(store, payload, user, utc_now().isoformat())
+    except HTTPException:
+        raise
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"account": result}
+
+
+@app.get("/api/admin/accounting/periods")
+async def accounting_periods(request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    await require_committee(store, request)
+    try:
+        result = await accounting.list_periods(store)
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"periods": result}
+
+
+@app.post("/api/admin/accounting/periods")
+async def accounting_create_period(request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    user = await require_committee(store, request)
+    payload = await _body(request, AccountingPeriodCreate, limit=16 * 1024)
+    try:
+        result = await accounting.create_period(store, payload, user, utc_now().isoformat())
+    except HTTPException:
+        raise
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"period": result}
+
+
+@app.get("/api/admin/accounting/journal-entries")
+@app.get("/api/admin/accounting/entries")
+async def accounting_entries(request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    await require_committee(store, request)
+    try:
+        result = await accounting.list_entries(store)
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"entries": result}
+
+
+@app.get("/api/admin/accounting/journal-entries/{entry_id}")
+@app.get("/api/admin/accounting/entries/{entry_id}")
+async def accounting_entry(entry_id: str, request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    await require_committee(store, request)
+    try:
+        result = await accounting._entry_record(store, entry_id)
+    except HTTPException:
+        raise
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"entry": result}
+
+
+@app.post("/api/admin/accounting/journal-entries")
+@app.post("/api/admin/accounting/entries")
+async def accounting_create_entry(request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    user = await require_committee(store, request)
+    payload = await _body(request, JournalEntryCreate, limit=256 * 1024)
+    try:
+        result = await accounting.create_entry(store, payload, user, utc_now().isoformat())
+    except HTTPException:
+        raise
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"entry": result}
+
+
+@app.post("/api/admin/accounting/journal-entries/{entry_id}/post")
+@app.post("/api/admin/accounting/entries/{entry_id}/post")
+async def accounting_post_entry(entry_id: str, request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    user = await require_committee(store, request)
+    payload = await _body(request, JournalPostRequest, limit=16 * 1024)
+    try:
+        result = await accounting.post_entry(store, entry_id, payload, user, utc_now().isoformat())
+    except HTTPException:
+        raise
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"entry": result}
+
+
+@app.post("/api/admin/accounting/journal-entries/{entry_id}/reverse")
+@app.post("/api/admin/accounting/entries/{entry_id}/reverse")
+async def accounting_reverse_entry(entry_id: str, request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    user = await require_committee(store, request)
+    payload = await _body(request, JournalReversalRequest, limit=32 * 1024)
+    try:
+        result = await accounting.reverse_entry(store, entry_id, payload, user, utc_now().isoformat())
+    except HTTPException:
+        raise
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"entry": result}
+
+
+@app.post("/api/admin/accounting/journal-entries/{entry_id}/correct")
+@app.post("/api/admin/accounting/entries/{entry_id}/correct")
+async def accounting_correct_entry(entry_id: str, request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    user = await require_committee(store, request)
+    payload = await _body(request, JournalCorrectionRequest, limit=256 * 1024)
+    try:
+        result = await accounting.correct_entry(store, entry_id, payload, user, utc_now().isoformat())
+    except HTTPException:
+        raise
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"entry": result}
+
+
+@app.post("/api/admin/accounting/periods/{period_id}/close")
+async def accounting_close_period(period_id: str, request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    user = await require_committee(store, request)
+    payload = await _body(request, PeriodActionRequest, limit=16 * 1024)
+    try:
+        result = await accounting.close_period(store, period_id, payload, user, utc_now().isoformat())
+    except HTTPException:
+        raise
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"period": result}
+
+
+@app.post("/api/admin/accounting/periods/{period_id}/reopen")
+async def accounting_reopen_period(period_id: str, request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    user = await require_committee(store, request)
+    payload = await _body(request, PeriodActionRequest, limit=16 * 1024)
+    try:
+        result = await accounting.reopen_period(store, period_id, payload, user, utc_now().isoformat())
+    except HTTPException:
+        raise
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"period": result}
+
+
+@app.get("/api/admin/accounting/audit-events")
+@app.get("/api/admin/accounting/audit")
+async def accounting_audit(
+    request: Request,
+    response: Response,
+    periodId: str | None = None,
+    entityType: str | None = None,
+    limit: int = 100,
+) -> dict[str, Any]:
+    store = store_for(request)
+    await require_committee(store, request)
+    try:
+        result = await accounting.list_audit_events(store, period_id=periodId, entity_type=entityType, limit=limit)
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return {"events": result}

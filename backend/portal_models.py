@@ -15,13 +15,14 @@ from datetime import date, datetime
 from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 
 MAX_PAYLOAD_BYTES = 16 * 1024 * 1024
 MAX_IMAGE_BYTES = 4 * 1024 * 1024
 MAX_COLLECTION_ROWS = 25000
 MAX_MONEY = 1_000_000_000_000
+MAX_MINOR_UNITS = MAX_MONEY * 100
 COLLECTION_NAMES = (
     "residents", "ledger", "payments", "amcRates", "openingBalances",
     "expenseTypes", "fixedDeposits", "events", "officeBearers", "tallyReconciliation",
@@ -29,6 +30,7 @@ COLLECTION_NAMES = (
 
 StableId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=512, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]*$")]
 ShortText = Annotated[str, StringConstraints(strip_whitespace=True, max_length=240)]
+OptionalPrivateText = Annotated[str, StringConstraints(strip_whitespace=True, max_length=240)]
 RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=240)]
 DetailsText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10000)]
 Money = Annotated[float, Field(strict=True, allow_inf_nan=False, ge=-MAX_MONEY, le=MAX_MONEY)]
@@ -57,6 +59,17 @@ def financial_year(value: str) -> str:
     if not match or not 1900 <= int(match[1]) <= 9998 or int(match[2]) != (int(match[1]) + 1) % 100:
         raise ValueError("Use a consecutive financial year such as 2026–27.")
     return f"{match[1]}–{match[2]}"
+
+
+def financial_year_for_date(value: date) -> str:
+    start = value.year if value.month >= 4 else value.year - 1
+    return f"{start}–{str(start + 1)[-2:]}"
+
+
+def financial_year_bounds(value: str) -> tuple[date, date]:
+    canonical = financial_year(value)
+    start_year = int(canonical[:4])
+    return date(start_year, 4, 1), date(start_year + 1, 3, 31)
 
 
 def iso_date(value: str) -> str:
@@ -125,6 +138,9 @@ class ResidentRecord(PortalModel):
     name: RequiredText
     mobile: str
     residentType: Literal["Owner", "Tenant", "Unspecified"] = "Unspecified"
+    profession: OptionalPrivateText | None = None
+    tenantOwnerName: OptionalPrivateText | None = None
+    publicProfessionalListing: bool = False
     initialCharge: NonnegativeMoney = 500
     initialChargePaid: bool = False
     membershipPayment: PaymentDetails | None = None
@@ -137,6 +153,16 @@ class ResidentRecord(PortalModel):
 
     _mobile = field_validator("mobile")(normalize_mobile)
     _created = field_validator("createdAt")(timestamp)
+
+    @field_validator("profession", "tenantOwnerName", mode="before")
+    @classmethod
+    def blank_private_text_is_missing(cls, value: Any) -> Any:
+        # Existing committee forms send an empty string for optional inputs.
+        # Store that as an absent value so blank private fields do not become
+        # visible directory data on a later snapshot.
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
     @field_validator("password")
     @classmethod
@@ -153,6 +179,8 @@ class ResidentRecord(PortalModel):
             raise ValueError("Paid membership requires payment date, mode and details.")
         if not self.initialChargePaid:
             self.membershipPayment = None
+        if self.publicProfessionalListing and not self.profession:
+            raise ValueError("A public professional listing requires a profession.")
         return self
 
 
@@ -197,6 +225,195 @@ class LedgerEntry(PortalModel):
         if self.kind != "AMC Transfer" and self.transferOf:
             raise ValueError("Only an AMC transfer may reference an advance transfer.")
         return self
+
+
+AccountType = Literal["Asset", "Liability", "Equity", "Income", "Expense"]
+JournalStatus = Literal["Draft", "Posted"]
+PeriodStatus = Literal["Open", "Closed"]
+
+
+Paise = Annotated[int, Field(strict=True, ge=0, le=MAX_MINOR_UNITS)]
+
+
+class AccountCreate(PortalModel):
+    id: StableId | None = None
+    code: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=32)]
+    name: RequiredText
+    accountType: AccountType
+    parentId: StableId | None = None
+    active: bool = True
+
+
+class AccountRecord(AccountCreate):
+    id: StableId
+    createdAt: str
+    updatedAt: str
+
+    _created = field_validator("createdAt", "updatedAt")(timestamp)
+
+
+class AccountingPeriodCreate(PortalModel):
+    id: StableId | None = None
+    financialYear: str
+    startDate: str
+    endDate: str
+
+    _fy = field_validator("financialYear")(financial_year)
+    _dates = field_validator("startDate", "endDate")(iso_date)
+
+    @model_validator(mode="after")
+    def dates_match_year(self) -> AccountingPeriodCreate:
+        expected_start, expected_end = financial_year_bounds(self.financialYear)
+        if date.fromisoformat(self.startDate) != expected_start or date.fromisoformat(self.endDate) != expected_end:
+            raise ValueError("Accounting periods must cover April 1 through March 31 of their financial year.")
+        return self
+
+
+class AccountingPeriodRecord(AccountingPeriodCreate):
+    id: StableId
+    status: PeriodStatus
+    closedAt: str | None = None
+    closedBy: StableId | None = None
+    closeReason: ShortText | None = None
+    closeAuthorization: ShortText | None = None
+    reopenedAt: str | None = None
+    reopenedBy: StableId | None = None
+    reopenReason: ShortText | None = None
+    reopenAuthorization: ShortText | None = None
+    createdAt: str
+
+    _timestamps = field_validator("closedAt", "reopenedAt", "createdAt")(timestamp)
+
+
+class JournalLineInput(PortalModel):
+    accountId: StableId
+    debitPaise: Paise = Field(validation_alias=AliasChoices("debitPaise", "debitMinorUnits"))
+    creditPaise: Paise = Field(validation_alias=AliasChoices("creditPaise", "creditMinorUnits"))
+    description: ShortText | None = None
+
+    @model_validator(mode="after")
+    def one_side_only(self) -> JournalLineInput:
+        if (self.debitPaise > 0) == (self.creditPaise > 0):
+            raise ValueError("Each journal line must contain either a positive debit or a positive credit, not both.")
+        return self
+
+
+class JournalEntryCreate(PortalModel):
+    id: StableId | None = None
+    date: str = Field(validation_alias=AliasChoices("date", "entryDate"))
+    financialYear: str
+    periodId: StableId | None = None
+    description: DetailsText
+    lines: Annotated[list[JournalLineInput], Field(min_length=2, max_length=200)]
+    status: Literal["Draft"] = "Draft"
+    sourceType: ShortText | None = None
+    sourceId: StableId | None = None
+    reversalOfEntryId: StableId | None = None
+    correctionOfEntryId: StableId | None = None
+
+    _date = field_validator("date")(iso_date)
+    _fy = field_validator("financialYear")(financial_year)
+
+    @model_validator(mode="after")
+    def balanced_and_consistent(self) -> JournalEntryCreate:
+        parsed = date.fromisoformat(self.date)
+        if financial_year_for_date(parsed) != self.financialYear:
+            raise ValueError("The journal date must belong to its financial year.")
+        debit = sum(line.debitPaise for line in self.lines)
+        credit = sum(line.creditPaise for line in self.lines)
+        if debit != credit:
+            raise ValueError("Journal debits and credits must balance in paise.")
+        if debit > MAX_MINOR_UNITS:
+            raise ValueError("The journal total exceeds the supported paise limit.")
+        if self.reversalOfEntryId and self.correctionOfEntryId:
+            raise ValueError("A journal entry cannot be both a reversal and a correction.")
+        return self
+
+
+class JournalLineRecord(JournalLineInput):
+    id: StableId
+    lineNo: int = Field(strict=True, ge=1, le=200)
+    accountCode: str | None = None
+    accountName: str | None = None
+
+
+class JournalEntryRecord(JournalEntryCreate):
+    id: StableId
+    status: JournalStatus
+    createdBy: StableId
+    createdAt: str
+    postedBy: StableId | None = None
+    postedAt: str | None = None
+    lines: Annotated[list[JournalLineRecord], Field(min_length=2, max_length=200)]
+
+    _timestamps = field_validator("createdAt", "postedAt")(timestamp)
+
+
+class JournalPostRequest(PortalModel):
+    reason: ShortText | None = None
+
+
+class PeriodActionRequest(PortalModel):
+    reason: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=240)]
+    authorization: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=240)]
+
+
+class JournalReversalRequest(PeriodActionRequest):
+    date: str | None = Field(default=None, validation_alias=AliasChoices("date", "entryDate"))
+    periodId: StableId | None = None
+    description: ShortText | None = None
+
+    _date = field_validator("date")(lambda value: iso_date(value) if value is not None else None)
+
+
+class JournalCorrectionRequest(PeriodActionRequest):
+    date: str | None = Field(default=None, validation_alias=AliasChoices("date", "entryDate"))
+    financialYear: str | None = None
+    periodId: StableId | None = None
+    description: DetailsText | None = None
+    lines: Annotated[list[JournalLineInput], Field(min_length=2, max_length=200)]
+
+    _date = field_validator("date")(lambda value: iso_date(value) if value is not None else None)
+    _fy = field_validator("financialYear")(lambda value: financial_year(value) if value is not None else None)
+
+    @model_validator(mode="after")
+    def balanced(self) -> JournalCorrectionRequest:
+        if self.date is not None and self.financialYear is not None:
+            if financial_year_for_date(date.fromisoformat(self.date)) != self.financialYear:
+                raise ValueError("The journal date must belong to its financial year.")
+        if sum(line.debitPaise for line in self.lines) != sum(line.creditPaise for line in self.lines):
+            raise ValueError("Journal debits and credits must balance in paise.")
+        return self
+
+
+class AuditEventRecord(PortalModel):
+    id: StableId
+    occurredAt: str
+    actorUserId: StableId
+    actorUsername: RequiredText
+    action: RequiredText
+    entityType: RequiredText
+    entityId: StableId
+    financialYear: str | None = None
+    periodId: StableId | None = None
+    reason: ShortText | None = None
+    authorization: ShortText | None = None
+    details: dict[str, Any] = {}
+
+    _occurred = field_validator("occurredAt")(timestamp)
+    _fy = field_validator("financialYear")(lambda value: financial_year(value) if value is not None else None)
+
+
+# Short names make the normalized accounting contracts easy to import without
+# changing the explicit request/record distinction used by the API handlers.
+Account = AccountRecord
+ChartOfAccount = AccountRecord
+AccountingPeriod = AccountingPeriodRecord
+FinancialPeriod = AccountingPeriodRecord
+JournalLine = JournalLineRecord
+JournalEntryLine = JournalLineRecord
+JournalEntry = JournalEntryRecord
+AuditEvent = AuditEventRecord
 
 
 class PaymentRecord(PortalModel):
