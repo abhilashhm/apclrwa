@@ -100,6 +100,21 @@ LOCAL_SERVICE_CONTACTS = [
     {"id": "water-tanker-manohar", "label": "Water tanker — Manohar", "number": "8050529768"},
     {"id": "water-tanker-suraksha", "label": "Suraksha Tanker", "number": "9844616879"},
 ]
+DEFAULT_CONTACTS = [
+    *copy.deepcopy(OFFICIAL_PUBLIC_CONTACTS),
+    *[{
+        **service,
+        "kind": "local",
+        "source": "Association-maintained",
+        "note": "Local service number supplied by APCLRWA; please confirm availability.",
+    } for service in LOCAL_SERVICE_CONTACTS],
+]
+DEFAULT_WATER_SCHEDULE = [
+    {"id": "water-bwssb-cauvery", "source": "BWSSB", "area": "Cauvery Water", "days": "Tuesday and Friday", "season": "Regular"},
+    {"id": "water-cmc-west-cross-east", "source": "CMC Water", "area": "West + 1st Cross East", "days": "Thursday and Sunday", "season": "Regular", "note": "1st and 3rd West; 1st Cross East"},
+    {"id": "water-cmc-west-a-cross", "source": "CMC Water", "area": "West + 1st A Cross", "days": "Wednesday and Saturday", "season": "Regular", "note": "2nd and 4th West; 1st A Cross"},
+    {"id": "water-cmc-summer-all", "source": "CMC Water", "area": "All crosses", "days": "Monday", "season": "Summer", "note": "Additional summer water day"},
+]
 
 
 def _auth() -> Any:
@@ -120,7 +135,8 @@ def _defaults() -> dict[str, Any]:
         "residents": [], "ledger": [], "payments": [],
         "amcRates": copy.deepcopy(DEFAULT_AMC_RATES), "openingBalances": None,
         "expenseTypes": list(DEFAULT_EXPENSE_TYPES), "fixedDeposits": [], "events": [],
-        "officeBearers": copy.deepcopy(DEFAULT_OFFICE_BEARERS), "tallyReconciliation": None,
+        "officeBearers": copy.deepcopy(DEFAULT_OFFICE_BEARERS), "contacts": copy.deepcopy(DEFAULT_CONTACTS),
+        "waterSchedule": copy.deepcopy(DEFAULT_WATER_SCHEDULE), "tallyReconciliation": None,
     }
 
 
@@ -354,15 +370,9 @@ def _public_professional(resident: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-def _public_contacts(office_bearers: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Return official numbers plus committee-published association contacts."""
-    contacts = copy.deepcopy(OFFICIAL_PUBLIC_CONTACTS)
-    contacts.extend({
-        **service,
-        "kind": "local",
-        "source": "Association-maintained",
-        "note": "Local service number supplied by APCLRWA; please confirm availability.",
-    } for service in LOCAL_SERVICE_CONTACTS)
+def _public_contacts(office_bearers: list[dict[str, Any]], configured: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    """Return committee-managed contacts, retaining legacy defaults when needed."""
+    contacts = copy.deepcopy(configured if configured is not None else DEFAULT_CONTACTS)
     for person in office_bearers:
         phone = str(person.get("phone") or "").strip()
         if not phone:
@@ -403,6 +413,7 @@ def _snapshot(connection: sqlite3.Connection, revision: int, collections: dict[s
             "ledger": [row for row in collections["ledger"] if row.get("residentId") == resident_id and row["status"] == "Posted" and row["kind"] in RECEIPT_KINDS],
             "payments": [row for row in collections["payments"] if row.get("residentId") == resident_id],
             "amcRates": collections["amcRates"], "events": collections["events"], "officeBearers": collections["officeBearers"],
+            "contacts": collections["contacts"], "waterSchedule": collections["waterSchedule"],
             "openingBalances": None, "expenseTypes": [], "fixedDeposits": [], "tallyReconciliation": None,
         }
     return {"revision": revision, "collections": visible, "currentResident": current}
@@ -1136,7 +1147,8 @@ def public_content(response: Response) -> dict[str, Any]:
             "events": [row for row in collections["events"] if not row.get("residentsOnly", False)],
             "officeBearers": collections["officeBearers"],
             "professionals": professionals,
-            "contacts": _public_contacts(collections["officeBearers"]),
+            "contacts": _public_contacts(collections["officeBearers"], collections["contacts"]),
+            "waterSchedule": collections["waterSchedule"],
         }
 
 

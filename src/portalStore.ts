@@ -35,7 +35,7 @@ export function getSessionResident():ResidentRecord {
 }
 function adopt(snapshot:PortalSnapshot, started:number):PortalSnapshot {
   if(started!==epoch)throw new ApiError('The session changed. Please sign in again.',401);
-  if(!snapshot||!Number.isInteger(snapshot.revision)||!snapshot.collections||['residents','ledger','payments','amcRates','expenseTypes','fixedDeposits','events','officeBearers'].some(name=>!Array.isArray(snapshot.collections[name as CollectionName])))throw new ApiError('The server returned incomplete portal data.',502);
+  if(!snapshot||!Number.isInteger(snapshot.revision)||!snapshot.collections||['residents','ledger','payments','amcRates','expenseTypes','fixedDeposits','events','officeBearers','contacts','waterSchedule'].some(name=>!Array.isArray(snapshot.collections[name as CollectionName])))throw new ApiError('The server returned incomplete portal data.',502);
   // Defense in depth: only the server's password-free resident model enters memory.
   const stripPassword=(resident:ResidentRecord)=>Object.fromEntries(Object.entries(resident).filter(([key])=>!/password/i.test(key)||key==='tempPassword')) as ResidentRecord;
   const safe={...snapshot,collections:{...snapshot.collections,residents:snapshot.collections.residents.map(stripPassword)},currentResident:snapshot.currentResident?stripPassword(snapshot.currentResident):null};
@@ -133,8 +133,8 @@ export async function loadPublicContent():Promise<void> {
   update({publicLoading:true,publicError:''});
   try {
     const content=await apiRequest<PublicContent>('/api/public/content',{},false);
-    if(!Array.isArray(content?.events)||!Array.isArray(content?.officeBearers)||!Array.isArray(content?.professionals)||!Array.isArray(content?.contacts))throw new Error('The server returned incomplete public content.');
-    update({publicContent:{events:content.events.filter(event=>!event.residentsOnly),officeBearers:content.officeBearers,professionals:content.professionals,contacts:content.contacts}});
+    if(!Array.isArray(content?.events)||!Array.isArray(content?.officeBearers)||!Array.isArray(content?.professionals)||!Array.isArray(content?.contacts)||!Array.isArray(content?.waterSchedule))throw new Error('The server returned incomplete public content.');
+    update({publicContent:{events:content.events.filter(event=>!event.residentsOnly),officeBearers:content.officeBearers,professionals:content.professionals,contacts:content.contacts,waterSchedule:content.waterSchedule}});
   } catch(error) {update({publicContent:null,publicError:errorMessage(error)})}
   finally {update({publicLoading:false})}
 }

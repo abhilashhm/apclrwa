@@ -3,6 +3,7 @@ export type EventItem = {id:string;tag:string;title:string;text:string;date:stri
 export type OfficeBearer = {id?:string;name:string;display:string;role:string;phone:string;image?:string};
 export type PublicProfessional = {name:string;house:string;profession:string;contact?:string};
 export type PublicContact = {id:string;label:string;number:string;kind:'emergency'|'local';source:'Official/public'|'Association-maintained';note?:string};
+export type WaterScheduleItem = {id:string;source:string;area:string;days:string;season:'Regular'|'Summer'|'Special';note?:string};
 export type PaymentDetails = {date:string;mode:string;details:string};
 export type ResidentRecord = {id:string;house:string;cross:string;name:string;mobile:string;residentType:'Owner'|'Tenant'|'Unspecified';profession?:string;tenantOwnerName?:string;publicProfessionalListing?:boolean;initialCharge:number;initialChargePaid:boolean;membershipPayment?:PaymentDetails;active:boolean;createdAt:string;tempPassword?:boolean;hasAccount?:boolean};
 // Password is a write-only request field. It is never part of a resident response/cache.
@@ -22,12 +23,14 @@ export type PortalCollections = {
   fixedDeposits:FixedDeposit[];
   events:EventItem[];
   officeBearers:OfficeBearer[];
+  contacts:PublicContact[];
+  waterSchedule:WaterScheduleItem[];
   tallyReconciliation:any;
 };
 export type CollectionName = keyof PortalCollections;
 export type CollectionWrite<K extends CollectionName> = K extends 'residents' ? ResidentWrite[] : PortalCollections[K];
 export type PortalSnapshot = {revision:number;collections:PortalCollections;currentResident:ResidentRecord|null};
-export type PublicContent = {events:EventItem[];officeBearers:OfficeBearer[];professionals:PublicProfessional[];contacts:PublicContact[]};
+export type PublicContent = {events:EventItem[];officeBearers:OfficeBearer[];professionals:PublicProfessional[];contacts:PublicContact[];waterSchedule:WaterScheduleItem[]};
 export type MigrationCollections = Partial<Omit<PortalCollections,'tallyReconciliation'>>;
 export type MigrationPreview = {counts:Record<string,number>;warnings:string[];revision:number};
 export type AccountingAccount = {id:string;code:string;name:string;accountType:'Asset'|'Liability'|'Equity'|'Income'|'Expense';parentId?:string|null;active:boolean;createdAt:string;updatedAt:string};

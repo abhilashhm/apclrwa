@@ -25,7 +25,7 @@ MAX_MONEY = 1_000_000_000_000
 MAX_MINOR_UNITS = MAX_MONEY * 100
 COLLECTION_NAMES = (
     "residents", "ledger", "payments", "amcRates", "openingBalances",
-    "expenseTypes", "fixedDeposits", "events", "officeBearers", "tallyReconciliation",
+    "expenseTypes", "fixedDeposits", "events", "officeBearers", "contacts", "waterSchedule", "tallyReconciliation",
 )
 
 StableId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=512, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]*$")]
@@ -494,7 +494,7 @@ class FixedDeposit(PortalModel):
 
 class EventItem(PortalModel):
     id: StableId
-    tag: ShortText = "EVENTS"
+    tag: ShortText = "Events"
     title: RequiredText
     text: DetailsText
     date: ShortText = ""
@@ -538,6 +538,24 @@ class OfficeBearer(PortalModel):
     image: str | None = None
 
     _image = field_validator("image")(safe_image)
+
+
+class ContactRecord(PortalModel):
+    id: StableId
+    label: RequiredText
+    number: ShortText
+    kind: Literal["emergency", "local"] = "local"
+    source: Literal["Official/public", "Association-maintained"] = "Association-maintained"
+    note: ShortText | None = None
+
+
+class WaterScheduleItem(PortalModel):
+    id: StableId
+    source: RequiredText
+    area: RequiredText
+    days: RequiredText
+    season: Literal["Regular", "Summer", "Special"] = "Regular"
+    note: ShortText | None = None
 
 
 class BookReconciliation(PortalModel):
@@ -650,7 +668,7 @@ class TallyImport(PortalModel):
 ROW_MODELS: dict[str, type[PortalModel]] = {
     "residents": ResidentRecord, "ledger": LedgerEntry, "payments": PaymentRecord,
     "amcRates": AMCRate, "fixedDeposits": FixedDeposit, "events": EventItem,
-    "officeBearers": OfficeBearer,
+    "officeBearers": OfficeBearer, "contacts": ContactRecord, "waterSchedule": WaterScheduleItem,
 }
 
 

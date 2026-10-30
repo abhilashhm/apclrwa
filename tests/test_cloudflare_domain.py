@@ -27,6 +27,13 @@ class CloudflareDomainTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             EventItem(id="E-1", title="Album", text="Photos", googleAlbumUrl="http://photos.app.goo.gl/example")
 
+    def test_public_information_defaults_are_managed_collections(self):
+        collections = domain.defaults()
+        self.assertGreaterEqual(len(collections["contacts"]), 5)
+        self.assertEqual({row["source"] for row in collections["contacts"]}, {"Official/public", "Association-maintained"})
+        self.assertEqual(len(collections["waterSchedule"]), 4)
+        self.assertIn("Summer", {row["season"] for row in collections["waterSchedule"]})
+
     def test_google_album_extracts_embedded_album_data(self):
         html = r'''<script>
           AF_initDataCallback({key: 'ds:1', data:[0, [["photo-1", ["https://lh3.googleusercontent.com/pw/ABC=w1200-h800", 1200, 800]]]], sideChannel: {}});

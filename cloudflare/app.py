@@ -377,6 +377,8 @@ async def _snapshot(store: D1Store, revision: int, collections: dict[str, Any], 
             "amcRates": collections["amcRates"],
             "events": collections["events"],
             "officeBearers": collections["officeBearers"],
+            "contacts": collections["contacts"],
+            "waterSchedule": collections["waterSchedule"],
             "openingBalances": None,
             "expenseTypes": [],
             "fixedDeposits": [],
@@ -945,7 +947,8 @@ async def public_content(request: Request, response: Response) -> dict[str, Any]
             for row in collections["residents"]
             if row.get("active") and row.get("publicProfessionalListing") and row.get("profession")
         ],
-        "contacts": domain.public_contacts(collections["officeBearers"]),
+        "contacts": domain.public_contacts(collections["officeBearers"], collections["contacts"]),
+        "waterSchedule": collections["waterSchedule"],
     }
 
 

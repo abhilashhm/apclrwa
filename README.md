@@ -59,6 +59,12 @@ visitor opens the event album. Only `photos.app.goo.gl` and
 `photos.google.com` links are accepted; the service returns Google-hosted image
 URLs and does not store the photos.
 
+Committee members can manage public contacts in the **Contacts** admin section,
+with separate **Official/public** and **Association-maintained** categories.
+Water disbursement entries are managed in **Water Schedule**, and event posts
+use selectable categories including **Festival / Cultural Events**, **Events**,
+and **Information**.
+
 ## Checks
 
 ```powershell
