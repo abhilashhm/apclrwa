@@ -53,6 +53,12 @@ on the public professional directory only when the committee records explicit
 consent. The homepage also separates official/public emergency contacts from
 association-maintained numbers.
 
+Committee members can attach an optional public Google Photos album link to an
+event. The homepage loads the album photos into a responsive gallery when a
+visitor opens the event album. Only `photos.app.goo.gl` and
+`photos.google.com` links are accepted; the service returns Google-hosted image
+URLs and does not store the photos.
+
 ## Checks
 
 ```powershell

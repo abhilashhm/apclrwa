@@ -11,5 +11,6 @@ __pycache__/
 *.py[cod]
 *.tsbuildinfo
 data/
+.opencode/
 *.sqlite3
 *.db

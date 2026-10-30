@@ -98,7 +98,7 @@ function Home({go}:{go:(view:View)=>void}){
       <button className="brand" onClick={()=>scrollTo('home')} aria-label="APC Layout home"><Logo/><span className="brand-copy"><strong>APC LAYOUT</strong><small>Residents Welfare Association</small></span></button>
       <button className="menu-toggle" aria-label={menuOpen?'Close navigation':'Open navigation'} aria-expanded={menuOpen} onClick={()=>setMenuOpen(!menuOpen)}><span/><span/><span/></button>
       <nav className={menuOpen?'nav-links open':'nav-links'} aria-label="Primary navigation">
-        <button onClick={()=>scrollTo('home')}>Home</button><button onClick={()=>scrollTo('community')}>Our Community</button><button onClick={()=>scrollTo('directory')}>Directory</button><button onClick={()=>scrollTo('contacts')}>Contacts</button><button onClick={()=>scrollTo('updates')}>Updates</button><button onClick={()=>scrollTo('transparency')}>Transparency</button>
+        <button onClick={()=>scrollTo('home')}>Home</button><button onClick={()=>scrollTo('directory')}>Directory</button><button onClick={()=>scrollTo('contacts')}>Contacts</button><button onClick={()=>scrollTo('community')}>Our Community</button><button onClick={()=>scrollTo('updates')}>Updates</button><button onClick={()=>scrollTo('transparency')}>Transparency</button>
         <ThemeToggle/><a href={WHATSAPP_CHANNEL} target="_blank" rel="noreferrer" className="nav-whatsapp">WhatsApp</a><button className="nav-login" onClick={()=>go('login')}>Resident / Committee Login</button>
       </nav>
     </div></header>
@@ -131,6 +131,7 @@ function Home({go}:{go:(view:View)=>void}){
 
 function EventMarquee({events,includePrivate=false}:{events:EventItem[];includePrivate?:boolean}){
   const[count,setCount]=useState(0);
+  const[album,setAlbum]=useState<{url:string;title:string}|null>(null);
   const visibleEvents=events.filter(e=>includePrivate||!e.residentsOnly);
   const total=visibleEvents.length;
   useEffect(()=>{
@@ -140,15 +141,45 @@ function EventMarquee({events,includePrivate=false}:{events:EventItem[];includeP
     return()=>window.clearInterval(timer);
   },[total]);
   if(!total)return <div className="events-empty">No updates published yet.</div>;
-  const looped=[...visibleEvents,...visibleEvents.slice(0,2)];
-  return <div className="event-marquee">
+  // Only clone cards when the carousel needs to wrap. Cloning a one-event
+  // list made the homepage display the same event twice.
+  const looped=total>3?[...visibleEvents,...visibleEvents.slice(0,2)]:visibleEvents;
+  return <><div className="event-marquee">
     <div className="event-marquee-window">
       <div className="event-marquee-track" style={{'--event-total':looped.length,'--event-index':count} as CSSProperties}>
-        {looped.map((item,i)=><article className="update-card event-slide" key={item.id+'-'+i}><div className="update-meta"><span>{item.tag}</span><time>{item.date}</time></div><h3>{item.title}</h3><p>{item.text}</p><div className="event-location">⌖ {item.location}</div></article>)}
+         {looped.map((item,i)=>{const albumUrl=eventAlbumUrl(item);return <EventCard item={item} albumUrl={albumUrl} onAlbum={url=>setAlbum({url,title:item.title})} key={item.id+'-'+i}/>})}
       </div>
     </div>
     {total>3&&<div className="event-marquee-dots">{visibleEvents.map((item,i)=><button key={item.id} className={i===count?'active':''} onClick={()=>setCount(i)} aria-label={`Show event ${i+1}`}/>)}</div>}
-  </div>
+   </div>{album&&<GoogleAlbumModal album={album} onClose={()=>setAlbum(null)}/>}</>
+}
+
+type GoogleAlbumPhoto={url:string;thumbnailUrl:string};
+function eventAlbumUrl(item:EventItem):string|undefined{
+  const value=item.googleAlbumUrl||item.link;
+  if(!value)return undefined;
+  try{
+    const parsed=new URL(value);
+    return parsed.protocol==='https:'&&(parsed.hostname==='photos.app.goo.gl'||parsed.hostname==='photos.google.com')?value:undefined;
+  }catch{return undefined}
+}
+function EventCard({item,albumUrl,onAlbum}:{item:EventItem;albumUrl?:string;onAlbum:(url:string)=>void}){
+  const[preview,setPreview]=useState<GoogleAlbumPhoto[]>([]);
+  useEffect(()=>{
+    if(!albumUrl){setPreview([]);return}
+    let active=true;
+    void apiRequest<{photos:GoogleAlbumPhoto[]}>(`/api/public/google-album?url=${encodeURIComponent(albumUrl)}&limit=3`,{},false).then(result=>{if(active)setPreview(result.photos.slice(0,3))}).catch(()=>{if(active)setPreview([])});
+    return()=>{active=false}
+  },[albumUrl]);
+  return <article className="update-card event-slide">{albumUrl&&preview.length>0&&<div className={`event-album-preview event-album-preview-${preview.length}`}>{preview.map((photo,index)=><button type="button" key={photo.thumbnailUrl} onClick={()=>onAlbum(albumUrl)} aria-label={`View event photo ${index+1}`}><img src={photo.thumbnailUrl} loading="lazy" alt=""/></button>)}</div>}<div className="update-meta"><span>{item.tag}</span><time>{item.date}</time></div><h3>{item.title}</h3><p>{item.text}</p><div className="event-location">⌖ {item.location}</div><div className="event-actions">{albumUrl&&<button type="button" className="album-button" onClick={()=>onAlbum(albumUrl)}>View event gallery <span>↗</span></button>}{item.link&&item.link!==albumUrl&&<a className="event-link" href={item.link} target="_blank" rel="noreferrer">Read more <span>↗</span></a>}</div></article>
+}
+function GoogleAlbumModal({album,onClose}:{album:{url:string;title:string};onClose:()=>void}){
+  const[photos,setPhotos]=useState<GoogleAlbumPhoto[]>([]);const[loading,setLoading]=useState(true);const[error,setError]=useState('');const[selected,setSelected]=useState<number|null>(null);
+  const closeViewer=()=>setSelected(null);
+  const move=(direction:number)=>setSelected(current=>current===null||!photos.length?current:(current+direction+photos.length)%photos.length);
+  useEffect(()=>{let active=true;setLoading(true);setError('');void apiRequest<{photos:GoogleAlbumPhoto[]}>('/api/public/google-album?url='+encodeURIComponent(album.url),{},false).then(result=>{if(active)setPhotos(result.photos)}).catch(error=>{if(active)setError(errorMessage(error))}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[album.url]);
+  useEffect(()=>{if(selected===null)return;const keyboard=(event:KeyboardEvent)=>{if(event.key==='Escape')closeViewer();else if(event.key==='ArrowLeft')move(-1);else if(event.key==='ArrowRight')move(1)};window.addEventListener('keydown',keyboard);return()=>window.removeEventListener('keydown',keyboard)},[selected,photos.length]);
+  return <div className="album-modal-backdrop" role="dialog" aria-modal="true" aria-label={album.title} onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}><section className="album-modal"><div className="album-modal-head"><div><div className="eyebrow">COMMUNITY PHOTO ALBUM</div><h2>{album.title}</h2></div><button type="button" className="modal-close" onClick={onClose} aria-label="Close album">×</button></div>{loading?<div className="album-state">Loading album photos…</div>:error?<div className="album-state login-error">{error}</div>:<><div className="album-grid">{photos.map((photo,index)=><button type="button" className="album-photo" onClick={()=>setSelected(index)} key={photo.url}><img src={photo.thumbnailUrl} loading="lazy" alt={`${album.title} photo ${index+1}`}/></button>)}</div><div className="album-modal-foot"><span>{photos.length} photos</span></div></>}{selected!==null&&photos[selected]&&<div className="photo-viewer-backdrop" role="dialog" aria-modal="true" aria-label={`Photo ${selected+1} of ${photos.length}`} onMouseDown={event=>{if(event.target===event.currentTarget)closeViewer()}}><button type="button" className="photo-viewer-close" onClick={closeViewer} aria-label="Close photo">×</button><button type="button" className="photo-viewer-nav photo-viewer-prev" onClick={()=>move(-1)} aria-label="Previous photo">‹</button><img className="photo-viewer-image" src={photos[selected].url} alt={`${album.title} photo ${selected+1} of ${photos.length}`}/><button type="button" className="photo-viewer-nav photo-viewer-next" onClick={()=>move(1)} aria-label="Next photo">›</button><div className="photo-viewer-count">{selected+1} / {photos.length}</div></div>}</section></div>;
 }
 
 function Footer({go,scrollTo}:{go:(v:View)=>void;scrollTo:(id:string)=>void}){
@@ -411,9 +442,9 @@ function EventManager(){
  const events=getCollection('events');const[revision,setRevision]=useState(getPortalRevision);const mutation=useMutation();
  const[modalOpen,setModalOpen]=useState(false);
  const[editing,setEditing]=useState<EventItem|null>(null);
- const[form,setForm]=useState<EventItem>({id:'',tag:'EVENTS',title:'',text:'',date:'',location:'APC Layout',image:'',link:'',residentsOnly:false,createdAt:new Date().toISOString()});
- const startAdd=()=>{setRevision(getPortalRevision());setEditing(null);setForm({id:crypto.randomUUID(),tag:'EVENTS',title:'',text:'',date:'',location:'APC Layout',image:'',link:'',residentsOnly:false,createdAt:new Date().toISOString()});setModalOpen(true)};
- const startEdit=(item:EventItem)=>{setRevision(getPortalRevision());setEditing(item);setForm(item);setModalOpen(true)};
+  const[form,setForm]=useState<EventItem>({id:'',tag:'EVENTS',title:'',text:'',date:'',location:'APC Layout',image:'',link:'',googleAlbumUrl:'',residentsOnly:false,createdAt:new Date().toISOString()});
+  const startAdd=()=>{setRevision(getPortalRevision());setEditing(null);setForm({id:crypto.randomUUID(),tag:'EVENTS',title:'',text:'',date:'',location:'APC Layout',image:'',link:'',googleAlbumUrl:'',residentsOnly:false,createdAt:new Date().toISOString()});setModalOpen(true)};
+  const startEdit=(item:EventItem)=>{setRevision(getPortalRevision());setEditing(item);setForm({...item,googleAlbumUrl:item.googleAlbumUrl||eventAlbumUrl(item)});setModalOpen(true)};
  const close=()=>{setModalOpen(false);setEditing(null)};
  const save=async(e:FormEvent)=>{e.preventDefault();if(await mutation.run(()=>saveCollection('events',current=>editing?current.map(x=>x.id===form.id?form:x):[...current,form],revision)))close()};
  const remove=async(id:string)=>{if(window.confirm('Delete this event from the shared server?'))await mutation.run(()=>saveCollection('events',current=>current.filter(x=>x.id!==id)))};
@@ -426,7 +457,7 @@ function EventManager(){
 function EventForm({form,setForm}:{form:EventItem;setForm:(v:EventItem)=>void}){
  const update=(key:keyof EventItem,value:string|boolean)=>setForm({...form,[key]:value});
  const photo=(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>setForm({...form,image:String(r.result)});r.readAsDataURL(f)};
- return <div className="event-form"><label>Category<input value={form.tag} onChange={e=>update('tag',e.target.value)} placeholder="EVENTS"/></label><label>Title<input value={form.title} onChange={e=>update('title',e.target.value)} placeholder="Community event title" required/></label><label>Description<textarea value={form.text} onChange={e=>update('text',e.target.value)} placeholder="What should residents know?" required/></label><div className="event-form-grid"><label>Date / time<input value={form.date} onChange={e=>update('date',e.target.value)} placeholder="18 October 2026"/></label><label>Location<input value={form.location} onChange={e=>update('location',e.target.value)} placeholder="APC Layout"/></label><label>Optional photo<input type="file" accept="image/*" onChange={photo}/></label><label>Optional link<input value={form.link||''} onChange={e=>update('link',e.target.value)} placeholder="https://..."/></label><label className="event-private-toggle"><input type="checkbox" checked={!!form.residentsOnly} onChange={e=>update('residentsOnly',e.target.checked)}/> Residents only — show after resident login</label></div></div>
+  return <div className="event-form"><label>Category<input value={form.tag} onChange={e=>update('tag',e.target.value)} placeholder="EVENTS"/></label><label>Title<input value={form.title} onChange={e=>update('title',e.target.value)} placeholder="Community event title" required/></label><label>Description<textarea value={form.text} onChange={e=>update('text',e.target.value)} placeholder="What should residents know?" required/></label><div className="event-form-grid"><label>Date / time<input value={form.date} onChange={e=>update('date',e.target.value)} placeholder="18 October 2026"/></label><label>Location<input value={form.location} onChange={e=>update('location',e.target.value)} placeholder="APC Layout"/></label><label>Optional photo<input type="file" accept="image/*" onChange={photo}/></label><label>Optional link<input value={form.link||''} onChange={e=>update('link',e.target.value)} placeholder="https://..."/></label><label>Optional Google Photos album<input type="url" value={form.googleAlbumUrl||''} onChange={e=>update('googleAlbumUrl',e.target.value)} placeholder="https://photos.app.goo.gl/..."/><small className="field-help">Use a public, link-shared Google Photos album.</small></label><label className="event-private-toggle"><input type="checkbox" checked={!!form.residentsOnly} onChange={e=>update('residentsOnly',e.target.checked)}/> Residents only — show after resident login</label></div></div>
 }
 
 function AdminOfficeBearers(){

@@ -501,6 +501,7 @@ class EventItem(PortalModel):
     location: ShortText = "APC Layout"
     image: str | None = None
     link: Annotated[str | None, Field(max_length=2048)] = None
+    googleAlbumUrl: Annotated[str | None, Field(max_length=2048)] = None
     residentsOnly: bool = False
     createdAt: str | None = None
 
@@ -515,6 +516,16 @@ class EventItem(PortalModel):
         parsed = urlsplit(value)
         if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.username or parsed.password:
             raise ValueError("Event links must be HTTP(S) URLs.")
+        return value
+
+    @field_validator("googleAlbumUrl")
+    @classmethod
+    def google_album_url(cls, value: str | None) -> str | None:
+        if not value:
+            return value
+        parsed = urlsplit(value)
+        if parsed.scheme != "https" or parsed.hostname not in {"photos.app.goo.gl", "photos.google.com"} or not parsed.path or parsed.username or parsed.password or parsed.fragment:
+            raise ValueError("Google album links must be public HTTPS photos.app.goo.gl or photos.google.com URLs.")
         return value
 
 

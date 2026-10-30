@@ -63,6 +63,7 @@ except ImportError:
 
 try:
     from . import domain
+    from . import google_album
     from .auth import (
         LoginRequest,
         PasswordChangeRequest,
@@ -85,6 +86,7 @@ try:
     from . import accounting
 except ImportError:
     import domain
+    import google_album
     from auth import (
     LoginRequest,
     PasswordChangeRequest,
@@ -160,6 +162,20 @@ def _cors_headers(request: Request, response: Response) -> None:
         response.headers["Vary"] = "Origin"
 
 
+def _security_headers(response: Response) -> None:
+    """Apply browser-side protections to API and static responses."""
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; "
+        "script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; "
+        "connect-src 'self'; frame-src https://www.google.com; form-action 'self'; "
+        "upgrade-insecure-requests"
+    )
+
+
 @app.middleware("http")
 async def security_and_cors(request: Request, call_next: Any) -> Response:
     env = request.scope.get("env")
@@ -191,6 +207,7 @@ async def security_and_cors(request: Request, call_next: Any) -> Response:
     if request.url.path.startswith("/api/") or getattr(request.state, "authenticated", False):
         response.headers["Cache-Control"] = "no-store"
         response.headers["Pragma"] = "no-cache"
+    _security_headers(response)
     if production and _public_scheme(request) == "https":
         response.headers["Strict-Transport-Security"] = "max-age=31536000"
     return response
@@ -854,6 +871,20 @@ async def health(request: Request) -> dict[str, str]:
     except D1Error as exc:
         _raise_storage(exc)
     return {"status": "ok"}
+
+
+@app.get("/api/public/google-album")
+async def public_google_album(request: Request, url: str, limit: int = 80) -> dict[str, Any]:
+    if len(url) > 2048:
+        raise HTTPException(422, "The Google Photos album link is too long.")
+    if not 1 <= limit <= google_album.MAX_PHOTOS:
+        raise HTTPException(422, "The requested album photo limit is invalid.")
+    try:
+        return await google_album.fetch_album(url, limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="The public Google Photos album could not be loaded right now.") from exc
 
 
 @app.post("/api/auth/login")

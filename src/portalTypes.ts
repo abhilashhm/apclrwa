@@ -1,5 +1,5 @@
 export type AuthUser = {id:string;username:string;displayName:string;role:'committee'|'resident';residentId?:string;tempPassword?:boolean};
-export type EventItem = {id:string;tag:string;title:string;text:string;date:string;location:string;image?:string;link?:string;residentsOnly?:boolean;createdAt?:string};
+export type EventItem = {id:string;tag:string;title:string;text:string;date:string;location:string;image?:string;link?:string;googleAlbumUrl?:string;residentsOnly?:boolean;createdAt?:string};
 export type OfficeBearer = {id?:string;name:string;display:string;role:string;phone:string;image?:string};
 export type PublicProfessional = {name:string;house:string;profession:string;contact?:string};
 export type PublicContact = {id:string;label:string;number:string;kind:'emergency'|'local';source:'Official/public'|'Association-maintained';note?:string};

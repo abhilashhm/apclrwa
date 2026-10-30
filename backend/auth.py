@@ -7,6 +7,7 @@ here: deployments must configure Uvicorn's trusted proxy addresses explicitly.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import hmac
 import ipaddress
@@ -23,7 +24,7 @@ from pathlib import Path
 from typing import Any, Iterator
 from urllib.parse import urlsplit
 
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -123,6 +124,20 @@ _configured_origins = _origins_setting.split(",")
 if any(not origin.strip() for origin in _configured_origins):
     raise ValueError("APCLRWA_CORS_ORIGINS contains an empty origin.")
 ALLOWED_ORIGINS = list(dict.fromkeys(_validated_origin(origin.strip()) for origin in _configured_origins))
+
+
+def apply_security_headers(response: Response) -> None:
+    """Apply browser-side protections to API and authenticated responses."""
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; "
+        "script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; "
+        "connect-src 'self'; frame-src https://www.google.com; form-action 'self'; "
+        "upgrade-insecure-requests"
+    )
 
 
 class LoginRequest(BaseModel):
@@ -363,6 +378,7 @@ app.add_middleware(
 # ensuring every process exposes the same server-backed portal API.
 from . import portal as portal_api
 from . import accounting as accounting_api
+from . import google_album
 
 app.include_router(portal_api.router)
 app.include_router(accounting_api.router)
@@ -385,6 +401,7 @@ async def enforce_transport_and_origin(request: Request, call_next: Any) -> Resp
     if request.url.path.startswith("/api/") or getattr(request.state, "authenticated", False):
         response.headers["Cache-Control"] = "no-store"
         response.headers["Pragma"] = "no-cache"
+    apply_security_headers(response)
     if IS_PRODUCTION and request.url.scheme == "https":
         response.headers["Strict-Transport-Security"] = "max-age=31536000"
     return response
@@ -400,6 +417,16 @@ def startup() -> None:
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/public/google-album")
+async def public_google_album(url: str = Query(..., min_length=1, max_length=2048), limit: int = Query(80, ge=1, le=80)) -> dict[str, Any]:
+    try:
+        return await asyncio.to_thread(google_album.fetch_album, url, limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="The public Google Photos album could not be loaded right now.") from exc
 
 
 @app.post("/api/auth/login")

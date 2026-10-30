@@ -2,7 +2,7 @@
 
 ## Current status
 
-The APCLRWA Worker and D1 database were updated and verified on **October 23,
+The APCLRWA Worker and D1 database were updated and verified on **October 30,
 2026**. The existing GitHub Pages workflow is not used by this migration and
 remains disabled.
 
@@ -11,7 +11,7 @@ remains disabled.
 - Legacy Worker `apclrwa-community-portal`: deleted October 23, 2026
 - D1 database: `apclrwa-portal`
 - D1 database ID: `4abbc8f9-2951-40a7-bdd5-25a2d21c7963`
-- Deployment version ID: `9d62a98f-f73e-4863-bed4-bc8f807fa434` (October 23, 2026)
+- Deployment version ID: `ab623cdb-35dc-4582-ae63-c64dc464431c` (October 30, 2026)
 - Applied migrations: `0001_initial.sql`, `0002_password_scheme.sql`, `0003_accounting.sql`
 
 The public/static surface is live and independently checked. Remote D1 has an
@@ -34,9 +34,9 @@ The implementation keeps local development unchanged:
   and do not require R2 for the current snapshot size.
 - Normalized accounting endpoints and the **Accounting Controls** committee UI
   use `migrations/0003_accounting.sql`, which is now applied to remote D1 and
-  deployed with Worker version `9d62a98f-f73e-4863-bed4-bc8f807fa434`.
+  deployed with Worker version `ab623cdb-35dc-4582-ae63-c64dc464431c`.
 - The short Worker hostname `apclrwa.apclrwa-community-portal.workers.dev` was
-  verified on October 23, 2026; `/api/health` returned `{"status":"ok"}` and
+  verified on October 28, 2026; `/api/health` returned `{"status":"ok"}` and
   the portal collection versions, including `v21-ledger`, remained unchanged.
 - The legacy Worker was deleted on October 23, 2026. Its former hostname now
   returns HTTP 404; the active `apclrwa` Worker and D1 database are unaffected.
@@ -154,13 +154,16 @@ following commands remain useful for a future redeploy:
    batches require it; the current normalized `data/tally-import.json` snapshot
    is uploaded directly by a committee member and is not committed or deployed.
 
-The deployed homepage menu was verified in the browser in this order: Home,
-Our Community, Directory, Contacts, Updates, Transparency. The public page
-loads, `/api/health` returns `ok`, and the HTML references the built frontend
-asset. Remote D1 still contains Tally import `TALLY-2026-10-04-v1` (489 source
-rows; 608 ledger rows including transfers). The October 23 frontend deployment
-did not modify D1. The committee-only workflows were not re-tested in this
-browser session because it was not signed in.
+The deployed homepage menu is ordered: Home, Directory, Contacts, Our
+Community, Updates, Transparency. The public page loads, `/api/health` returns
+`ok`, and the HTML references the latest built frontend asset. Remote D1 still
+contains Tally import `TALLY-2026-10-04-v1` (489 source rows; 608 ledger rows
+including transfers). The October 28 security-header deployment did not modify
+D1. The Worker now returns HSTS, CSP, clickjacking, MIME-sniffing, referrer and
+permissions-policy headers; an untrusted-origin login request was rejected with
+HTTP 403.
+The committee-only workflows were not re-tested in this browser session because
+it was not signed in.
 
 The Worker/D1 deployment is complete. The Worker accepts the normalized Tally
 snapshot through the authenticated JSON upload route, and the normalized

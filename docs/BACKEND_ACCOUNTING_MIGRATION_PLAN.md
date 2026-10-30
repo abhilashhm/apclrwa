@@ -75,7 +75,7 @@ Implement monthly close/reopen and FY close/reopen services after period/date va
 
 ### Phase 8 — reports and operations
 
-Rebuild reports from journal/domain queries: maintenance collection and outstanding, membership, contribution, expense, cash/bank book, general ledger, trial balance, income/expense, FD principal/interest, reconciliation, ageing, defaulters, audit register/dashboard, master report, and audit pack. Add backup/restore with schema/version and uploads, pre-restore backup, validation, and audit event. Add gallery and production hardening when core accounting is stable.
+Rebuild reports from journal/domain queries: maintenance collection and outstanding, membership, contribution, expense, cash/bank book, general ledger, trial balance, income/expense, FD principal/interest, reconciliation, ageing, defaulters, audit register/dashboard, master report, and audit pack. Add backup/restore with schema/version and uploads, pre-restore backup, validation, and audit event. The public Google Photos event-album gallery is implemented; continue production hardening when core accounting is stable.
 
 ## Cutover questions to resolve with source records
 

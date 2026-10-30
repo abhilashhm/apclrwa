@@ -1,11 +1,12 @@
 # Production readiness snapshot
 
-Updated 2026-10-09 after importing the provided Tally exports locally.
+Updated 2026-10-28 after the Cloudflare security-header deployment.
 
 ## What is operational in this workspace
 
 - The React/Vite frontend builds with TypeScript checks (`npm run build`).
-- Committee and resident authentication and sessions run through the local FastAPI service and SQLite. Production cookie, HTTPS, explicit-origin, and SQLite login-throttling checks are enforced by configuration.
+- Committee and resident authentication and sessions run through the local FastAPI service and SQLite. Production cookie, HTTPS, explicit-origin, and SQLite login-throttling checks are enforced by configuration; the Cloudflare path uses the equivalent D1-backed controls.
+- Security headers are implemented in both service paths: HSTS in production, no-store API responses, MIME-sniffing and clickjacking protection, strict referrer and permissions policies, and a restrictive content-security policy. The Cloudflare Worker deployment and untrusted-origin rejection were verified on 2026-10-28.
 - Operational portal collections are stored in SQLite behind role-checked, revision-checked API endpoints. Resident data is server-filtered; passwords are hashed server-side and are never returned to the frontend.
 - Resident payment claims use server-side idempotency keys. Committee approval creates the associated posted receipt atomically rather than writing browser-local records.
 - Browser/localStorage data is available only through an explicit committee migration preview/import flow. The server validates the import, strips legacy credentials, rejects conflicts, and creates a private pre-import database backup.
@@ -24,7 +25,8 @@ Updated 2026-10-09 after importing the provided Tally exports locally.
 - AGM ledger voucher details omit ₹800 present in the cash book/closing balance. Do not infer its payee or purpose from the incomplete row.
 - The current FY AMC detail exports only run through July and total ₹18,000, while the complete bank/cash books through 2026-10-04 show ₹41,000. This is an incomplete supporting-export gap, not a bank/cash roll-forward difference.
 - Existing browser data may already contain manually entered items. The importer only deduplicates exact stable IDs and does not certify semantic duplicates against prior manual rows.
-- The normalized journal/audit/period layer is implemented but has not yet replaced historic Tally collection reporting or operational payment/expense workflows. Verified bank statement matching, receipt numbering, full journal-derived reports, operational backup/restore procedures, deployment secrets, and production hosting remain outstanding. Database backups are currently created before explicit browser/Tally imports.
+- The normalized journal/audit/period layer is implemented but has not yet replaced historic Tally collection reporting or operational payment/expense workflows. Verified bank statement matching, receipt numbering, full journal-derived reports, operational backup/restore procedures, deployment secrets, monitoring, and production hosting remain outstanding. Database backups are currently created before explicit browser/Tally imports.
+- Operational security still requires Cloudflare account 2FA and least-privilege access review, a documented D1 backup/restore drill, and authentication-failure monitoring/alerting.
 
 ## Tally controls from supplied books
 
