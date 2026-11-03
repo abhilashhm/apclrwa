@@ -1,6 +1,6 @@
 # Production readiness snapshot
 
-Updated 2026-10-28 after the Cloudflare security-header deployment.
+Updated 2026-11-03 after the authentication-monitoring and D1 recovery-drill deployment.
 
 ## What is operational in this workspace
 
@@ -25,7 +25,7 @@ Updated 2026-10-28 after the Cloudflare security-header deployment.
 - AGM ledger voucher details omit ₹800 present in the cash book/closing balance. Do not infer its payee or purpose from the incomplete row.
 - The current FY AMC detail exports only run through July and total ₹18,000, while the complete bank/cash books through 2026-10-04 show ₹41,000. This is an incomplete supporting-export gap, not a bank/cash roll-forward difference.
 - Existing browser data may already contain manually entered items. The importer only deduplicates exact stable IDs and does not certify semantic duplicates against prior manual rows.
-- The normalized journal/audit/period layer is implemented but has not yet replaced historic Tally collection reporting or operational payment/expense workflows. Verified bank statement matching, receipt numbering, full journal-derived reports, operational backup/restore procedures, deployment secrets, monitoring, and production hosting remain outstanding. Database backups are currently created before explicit browser/Tally imports.
+- The normalized journal/audit/period layer is implemented but has not yet replaced historic Tally collection reporting or operational payment/expense workflows. Verified bank statement matching, receipt numbering, full journal-derived reports, recurring backup retention, deployment secrets, external alert delivery, and production hosting remain outstanding. Database backups are currently created before explicit browser/Tally imports.
 - Committee users now have a **Security** view with privacy-preserving authentication-failure counts, timestamps, a configurable threshold, and a one-minute refresh. It does not expose usernames, IP addresses, account keys, or passwords. Cloudflare account 2FA and least-privilege access review remain dashboard tasks.
 - A documented D1 backup/restore drill is now in `docs/D1_BACKUP_RESTORE.md`; it must be run against a disposable destination before relying on it for recovery. Authentication monitoring is implemented in the Worker and local service, but external alert delivery still requires an operational notification channel.
 
@@ -44,7 +44,7 @@ The data import contains 489 records (366 for FY 2026–27 and 123 supporting FY
 2. Resolve opening cash and the missing AGM voucher details with the source records; obtain the missing AMC support exports if needed.
 3. Implement a chart of accounts, balanced immutable journal entries, reversals, posting permissions, and an append-only audit log.
 4. Move residents, membership/AMC, donations, expenses, cash/bank, and fixed deposits into typed backend APIs in reviewable slices.
-5. Add bank statement upload/matching, reconciliations, period/FY close controls, backup/restore, and reports derived from the journal.
-6. Configure secure production hosting, secrets, TLS, cookie settings, monitoring, and documented recovery procedures before real operational deployment.
+5. Add bank statement upload/matching, reconciliations, period/FY close controls, recurring backup retention, and reports derived from the journal.
+6. Configure secure production hosting, secrets, TLS, cookie settings, external alert delivery, and documented recovery procedures before real operational deployment.
 
 See [BACKEND_ACCOUNTING_MIGRATION_PLAN.md](BACKEND_ACCOUNTING_MIGRATION_PLAN.md) for the staged proposal and cutover controls.
