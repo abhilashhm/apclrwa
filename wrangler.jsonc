@@ -23,6 +23,7 @@
 	"vars": {
 		"APCLRWA_ENV": "production",
 		"APCLRWA_COOKIE_SECURE": "true",
-		"APCLRWA_CORS_ORIGINS": ""
+		"APCLRWA_CORS_ORIGINS": "",
+		"APCLRWA_AUTH_ALERT_FAILURES": "5"
 	}
 }

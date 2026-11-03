@@ -217,6 +217,50 @@ async def mark_failed(store: D1Store, attempt_id: str) -> None:
     await store.run("UPDATE auth_attempts SET outcome = 'failed' WHERE id = ?", attempt_id)
 
 
+async def authentication_monitor(store: D1Store, env: Any) -> dict[str, Any]:
+    """Return a privacy-preserving authentication-failure summary for committee users."""
+    window_seconds = integer_setting(env, "APCLRWA_AUTH_WINDOW_SECONDS", 900, 60, 86400)
+    alert_failures = integer_setting(env, "APCLRWA_AUTH_ALERT_FAILURES", 5, 1, 1000)
+    cutoff = time.time() - window_seconds
+    counts = {
+        str(row["outcome"]): int(row["count"])
+        for row in await store.all(
+            "SELECT outcome, COUNT(*) AS count FROM auth_attempts WHERE attempted_at > ? GROUP BY outcome",
+            cutoff,
+        )
+    }
+    recent = await store.all(
+        "SELECT attempted_at, outcome FROM auth_attempts "
+        "WHERE attempted_at > ? AND outcome IN ('failed', 'cleared') "
+        "ORDER BY attempted_at DESC LIMIT 50",
+        cutoff,
+    )
+    failed = counts.get("failed", 0)
+    cleared = counts.get("cleared", 0)
+    failures = failed + cleared
+    return {
+        "windowSeconds": window_seconds,
+        "failureAlertThreshold": alert_failures,
+        "failureCount": failures,
+        "activeFailureCount": failed,
+        "clearedFailureCount": cleared,
+        "pendingCount": counts.get("pending", 0),
+        "succeededCount": counts.get("succeeded", 0),
+        "alert": failures >= alert_failures,
+        "lastFailureAt": (
+            datetime.fromtimestamp(float(recent[0]["attempted_at"]), timezone.utc).isoformat()
+            if recent else None
+        ),
+        "recentFailures": [
+            {
+                "attemptedAt": datetime.fromtimestamp(float(row["attempted_at"]), timezone.utc).isoformat(),
+                "outcome": str(row["outcome"]),
+            }
+            for row in recent
+        ],
+    }
+
+
 async def authenticated_user(store: D1Store, request: Request) -> dict[str, Any]:
     token = request.cookies.get(SESSION_COOKIE)
     if not token or len(token) > 256:

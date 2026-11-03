@@ -73,6 +73,7 @@ try:
         hash_password,
         hash_session_token,
         mark_failed,
+        authentication_monitor,
         password_matches,
         public_user,
         require_committee,
@@ -96,6 +97,7 @@ except ImportError:
     hash_password,
     hash_session_token,
     mark_failed,
+    authentication_monitor,
     password_matches,
     public_user,
     require_committee,
@@ -924,6 +926,18 @@ async def logout(request: Request, response: Response) -> dict[str, str]:
 @app.get("/api/admin/session")
 async def committee_session(request: Request) -> dict[str, Any]:
     return {"user": await require_committee(store_for(request), request), "authorized": True}
+
+
+@app.get("/api/admin/security/auth-attempts")
+async def authentication_attempt_monitor(request: Request, response: Response) -> dict[str, Any]:
+    store = store_for(request)
+    await require_committee(store, request)
+    try:
+        result = await authentication_monitor(store, env_for(request))
+    except D1Error as exc:
+        _raise_storage(exc)
+    response.headers["Cache-Control"] = "no-store"
+    return result
 
 
 @app.get("/api/public/content")

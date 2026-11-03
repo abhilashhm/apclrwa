@@ -26,7 +26,8 @@ Updated 2026-10-28 after the Cloudflare security-header deployment.
 - The current FY AMC detail exports only run through July and total ₹18,000, while the complete bank/cash books through 2026-10-04 show ₹41,000. This is an incomplete supporting-export gap, not a bank/cash roll-forward difference.
 - Existing browser data may already contain manually entered items. The importer only deduplicates exact stable IDs and does not certify semantic duplicates against prior manual rows.
 - The normalized journal/audit/period layer is implemented but has not yet replaced historic Tally collection reporting or operational payment/expense workflows. Verified bank statement matching, receipt numbering, full journal-derived reports, operational backup/restore procedures, deployment secrets, monitoring, and production hosting remain outstanding. Database backups are currently created before explicit browser/Tally imports.
-- Operational security still requires Cloudflare account 2FA and least-privilege access review, a documented D1 backup/restore drill, and authentication-failure monitoring/alerting.
+- Committee users now have a **Security** view with privacy-preserving authentication-failure counts, timestamps, a configurable threshold, and a one-minute refresh. It does not expose usernames, IP addresses, account keys, or passwords. Cloudflare account 2FA and least-privilege access review remain dashboard tasks.
+- A documented D1 backup/restore drill is now in `docs/D1_BACKUP_RESTORE.md`; it must be run against a disposable destination before relying on it for recovery. Authentication monitoring is implemented in the Worker and local service, but external alert delivery still requires an operational notification channel.
 
 ## Tally controls from supplied books
 

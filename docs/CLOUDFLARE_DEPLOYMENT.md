@@ -165,6 +165,13 @@ HTTP 403.
 The committee-only workflows were not re-tested in this browser session because
 it was not signed in.
 
+The committee **Security** section exposes aggregate authentication activity for
+the configured rolling window. It reports failure counts, successful sign-ins,
+the alert threshold, and failure timestamps without exposing usernames, IP
+addresses, account keys, or passwords. `APCLRWA_AUTH_ALERT_FAILURES` defaults to
+5 and can be set as a Worker variable when a different review threshold is
+required. The endpoint is protected by the committee session.
+
 The Worker/D1 deployment is complete. The Worker accepts the normalized Tally
 snapshot through the authenticated JSON upload route, and the normalized
 accounting endpoints are available to committee sessions. Only the old

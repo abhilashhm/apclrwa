@@ -71,6 +71,7 @@ if IS_PRODUCTION and not COOKIE_SECURE:
 AUTH_ACCOUNT_LIMIT = _integer_setting("APCLRWA_AUTH_ACCOUNT_LIMIT", 5, 1, 100)
 AUTH_IP_LIMIT = _integer_setting("APCLRWA_AUTH_IP_LIMIT", 30, 1, 10000)
 AUTH_WINDOW_SECONDS = _integer_setting("APCLRWA_AUTH_WINDOW_SECONDS", 900, 60, 86400)
+AUTH_ALERT_FAILURES = _integer_setting("APCLRWA_AUTH_ALERT_FAILURES", 5, 1, 1000)
 
 DEFAULT_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
 _HOST_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", re.IGNORECASE)
@@ -346,6 +347,50 @@ def _successful_attempt(connection: sqlite3.Connection, attempt_id: str, usernam
     )
 
 
+def authentication_monitor() -> dict[str, Any]:
+    """Return a privacy-preserving authentication-failure summary for committee users."""
+    now = time.time()
+    cutoff = now - AUTH_WINDOW_SECONDS
+    with database() as connection:
+        counts = {
+            str(row["outcome"]): int(row["count"])
+            for row in connection.execute(
+                "SELECT outcome, COUNT(*) AS count FROM auth_attempts WHERE attempted_at > ? GROUP BY outcome",
+                (cutoff,),
+            )
+        }
+        recent = connection.execute(
+            "SELECT attempted_at, outcome FROM auth_attempts "
+            "WHERE attempted_at > ? AND outcome IN ('failed', 'cleared') "
+            "ORDER BY attempted_at DESC LIMIT 50",
+            (cutoff,),
+        ).fetchall()
+    failed = counts.get("failed", 0)
+    cleared = counts.get("cleared", 0)
+    failures = failed + cleared
+    return {
+        "windowSeconds": AUTH_WINDOW_SECONDS,
+        "failureAlertThreshold": AUTH_ALERT_FAILURES,
+        "failureCount": failures,
+        "activeFailureCount": failed,
+        "clearedFailureCount": cleared,
+        "pendingCount": counts.get("pending", 0),
+        "succeededCount": counts.get("succeeded", 0),
+        "alert": failures >= AUTH_ALERT_FAILURES,
+        "lastFailureAt": (
+            datetime.fromtimestamp(float(recent[0]["attempted_at"]), timezone.utc).isoformat()
+            if recent else None
+        ),
+        "recentFailures": [
+            {
+                "attemptedAt": datetime.fromtimestamp(float(row["attempted_at"]), timezone.utc).isoformat(),
+                "outcome": str(row["outcome"]),
+            }
+            for row in recent
+        ],
+    }
+
+
 def _password_matches(row: sqlite3.Row | None, password: str) -> bool:
     salt = bytes(row["password_salt"]) if row is not None else bytes(16)
     expected = bytes(row["password_hash"]) if row is not None else bytes(PASSWORD_DKLEN)
@@ -538,6 +583,11 @@ def logout(request: Request, response: Response) -> dict[str, str]:
 @app.get("/api/admin/session")
 def committee_session(user: dict[str, Any] = Depends(require_committee)) -> dict[str, Any]:
     return {"user": user, "authorized": True}
+
+
+@app.get("/api/admin/security/auth-attempts")
+def authentication_attempt_monitor(user: dict[str, Any] = Depends(require_committee)) -> dict[str, Any]:
+    return authentication_monitor()
 
 
 @app.get("/api/admin/tally-import")
