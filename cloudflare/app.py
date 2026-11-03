@@ -961,7 +961,7 @@ async def public_content(request: Request, response: Response) -> dict[str, Any]
             for row in collections["residents"]
             if row.get("active") and row.get("publicProfessionalListing") and row.get("profession")
         ],
-        "contacts": domain.public_contacts(collections["officeBearers"], collections["contacts"]),
+        "contacts": domain.public_contacts(collections["contacts"]),
         "waterSchedule": collections["waterSchedule"],
     }
 

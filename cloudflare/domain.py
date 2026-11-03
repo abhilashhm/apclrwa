@@ -450,21 +450,6 @@ def public_resident(resident: dict[str, Any], account: dict[str, Any] | None) ->
     return sanitized
 
 
-def public_contacts(office_bearers: list[dict[str, Any]], configured: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
-    """Return committee-managed contacts, retaining legacy defaults when needed."""
-    contacts = copy.deepcopy(configured if configured is not None else DEFAULT_CONTACTS)
-    for person in office_bearers:
-        phone = str(person.get("phone") or "").strip()
-        if not phone:
-            continue
-        role = str(person.get("role") or "Association contact")
-        name = str(person.get("display") or person.get("name") or "")
-        contacts.append({
-            "id": "association-" + str(person.get("id") or person.get("name")),
-            "label": role + (" — " + name if name else ""),
-            "number": phone,
-            "kind": "local",
-            "source": "Association-maintained",
-            "note": "Published by the APCLRWA committee; please confirm availability.",
-        })
-    return contacts
+def public_contacts(configured: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    """Return only committee-managed contacts; office bearers are separate content."""
+    return copy.deepcopy(configured if configured is not None else DEFAULT_CONTACTS)

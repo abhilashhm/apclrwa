@@ -129,17 +129,14 @@ class ResidentDirectoryModelTests(unittest.TestCase):
         self.assertNotIn("tenantOwnerName", local_listing or {})
 
     def test_public_contacts_keep_official_and_association_sources_separate(self):
-        office_bearers = [
-            {"id": "OB-1", "name": "Committee Member", "role": "President", "phone": "9876543210"},
-            {"id": "OB-2", "name": "No Phone", "role": "Treasurer", "phone": ""},
-        ]
-        for contacts in (backend_portal._public_contacts(office_bearers), domain.public_contacts(office_bearers)):
+        for contacts in (backend_portal._public_contacts(), domain.public_contacts()):
             self.assertEqual({row["number"] for row in contacts if row["source"] == "Official/public"}, {"112", "108", "101", "1912", "1930"})
             association = [row for row in contacts if row["source"] == "Association-maintained"]
-            self.assertEqual(len(association), 16)
+            self.assertEqual(len(association), 15)
             numbers = {row["number"] for row in association}
-            self.assertTrue({"9876543210", "9448800005", "9980365356", "8277884014", "9620480465", "9535161492", "080-22943703", "9535666127", "9916020005", "9845933067", "080-22971542", "9945439072", "7829822133", "9845080903", "8050529768", "9844616879"}.issubset(numbers))
+            self.assertTrue({"9448800005", "9980365356", "8277884014", "9620480465", "9535161492", "080-22943703", "9535666127", "9916020005", "9845933067", "080-22971542", "9945439072", "7829822133", "9845080903", "8050529768", "9844616879"}.issubset(numbers))
             self.assertTrue(all(row["kind"] == "local" for row in association))
+            self.assertNotIn("9876543210", numbers)
 
 
 class _LocalAuth:

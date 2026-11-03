@@ -370,24 +370,9 @@ def _public_professional(resident: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-def _public_contacts(office_bearers: list[dict[str, Any]], configured: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
-    """Return committee-managed contacts, retaining legacy defaults when needed."""
-    contacts = copy.deepcopy(configured if configured is not None else DEFAULT_CONTACTS)
-    for person in office_bearers:
-        phone = str(person.get("phone") or "").strip()
-        if not phone:
-            continue
-        role = str(person.get("role") or "Association contact")
-        name = str(person.get("display") or person.get("name") or "")
-        contacts.append({
-            "id": "association-" + str(person.get("id") or person.get("name")),
-            "label": role + (" — " + name if name else ""),
-            "number": phone,
-            "kind": "local",
-            "source": "Association-maintained",
-            "note": "Published by the APCLRWA committee; please confirm availability.",
-        })
-    return contacts
+def _public_contacts(configured: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    """Return only committee-managed contacts; office bearers are separate content."""
+    return copy.deepcopy(configured if configured is not None else DEFAULT_CONTACTS)
 
 
 def _snapshot(connection: sqlite3.Connection, revision: int, collections: dict[str, Any], user: dict[str, Any]) -> dict[str, Any]:
@@ -1147,7 +1132,7 @@ def public_content(response: Response) -> dict[str, Any]:
             "events": [row for row in collections["events"] if not row.get("residentsOnly", False)],
             "officeBearers": collections["officeBearers"],
             "professionals": professionals,
-            "contacts": _public_contacts(collections["officeBearers"], collections["contacts"]),
+            "contacts": _public_contacts(collections["contacts"]),
             "waterSchedule": collections["waterSchedule"],
         }
 
